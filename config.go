@@ -9,29 +9,37 @@ import (
 	"os"
 	"errors"
 	"path/filepath"
+	"sync"
 )
 
 var (
-	Conf       *Config
-	curPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
-	appPath    = curPath + "/conf/config.ini"
-	configFile = flag.String("config", appPath+"config/config.ini", "General configuration file")
+	conf       *Config
+	curPath, _  = filepath.Abs(filepath.Dir(os.Args[0]))
+	appPath        = curPath + "/conf/config.ini"
+	configFile  = flag.String("config", appPath+"config/config.ini", "General configuration file")
 )
 
 type Config struct {
-	values map[string]map[string]string
+	values *sync.Map
 }
 
 //topic list
 
 func NewConfig() *Config {
 	return &Config{
-		values: make(map[string]map[string]string),
+		values: &sync.Map{},
 	}
 }
 
+func GetConfigInstance() *Config{
+	if conf == nil{
+		InitConfig()
+	}
+	return conf
+}
+
 func InitConfig() error {
-	Conf = NewConfig()
+	conf = NewConfig()
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 	flag.Parse()
@@ -41,33 +49,55 @@ func InitConfig() error {
 		return errors.New(fmt.Sprintf("Fail to find %s %s", *configFile, err))
 	}
 
-	for _, section := range cfgSecs.Sections() {
-		options, err := cfgSecs.SectionOptions(section)
+	for _, s := range cfgSecs.Sections() {
+		options, err := cfgSecs.SectionOptions(s)
 		if err != nil {
-			log.Error("Read options of file %s section %s  failed, %s\n", *configFile, section, err)
+			log.Error("Read options of file %s s %s  failed, %s\n", *configFile, s, err)
 			continue
 		}
-		Conf.values[section] = make(map[string]string)
+		section := &sync.Map{}
 		for _, v := range options {
-			option, err := cfgSecs.String(section, v)
+			option, err := cfgSecs.String(s, v)
 			if err != nil {
 				log.Error("Read file %s option %s failed, %s\n", *configFile, v, err)
 				continue
 			}
-			Conf.values[section][v] = option
+			section.Store(v, option)
 		}
+		conf.values.Store(s, section)
 	}
 	return nil
 }
 
-func (c *Config) GetConfig(section, option string) string {
-	return c.values[section][option]
+func (c *Config) GetConfig(section string, option string) (string, error) {
+	var (
+		sectionCfg interface{}
+		optionCfg  interface{}
+		found      bool
+	)
+	if sectionCfg, found = c.values.Load(section); !found {
+		return "", errors.New(fmt.Sprintf("config section '%s' not found", section))
+	}
+
+	if optionCfg, found = sectionCfg.(sync.Map).Load(option); !found {
+		return "", errors.New(fmt.Sprintf("config option '%s' not found", option))
+	}
+
+	return optionCfg.(string), OK
 }
 
-func (c *Config) GetSection(section string) map[string]string {
-	return c.values[section]
+func (c *Config) GetSection(section string) (sync.Map, error) {
+	var (
+		sectionCfg interface{}
+		found      bool
+	)
+	if sectionCfg, found = c.values.Load(section); !found {
+		return sync.Map{}, errors.New(fmt.Sprintf("config section '%s' not found", section))
+	}
+
+	return sectionCfg.(sync.Map), OK
 }
 
-func (c *Config) GetAllConfig() map[string]map[string]string {
-	return c.values
+func (c *Config) GetAllConfig() sync.Map {
+	return *c.values
 }
