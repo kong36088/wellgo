@@ -1,21 +1,26 @@
 package wellgo
 
-
-type Context struct{
-	cfg Config
-
-	router Router
+type WContext struct {
+	proto string
 
 	req Request
 
 	resp Response
-
-	proto string
 }
 
-type Request interface{
+func newContext(proto string, req Request, resp Response) *WContext{
+	return &WContext{
+		proto: proto,
+		req:   req,
+		resp:  resp,
+	}
 }
 
-type Response interface{
+type Request interface {
+	parseRequest()
+	getArgs()
+}
 
+type Response interface {
+	response()
 }

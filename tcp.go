@@ -1,4 +1,4 @@
-package net
+package wellgo
 
 import "github.com/kong36088/wellgo"
 

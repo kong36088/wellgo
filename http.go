@@ -1,6 +1,10 @@
-package net
+package wellgo
 
-import "github.com/kong36088/wellgo"
+import (
+	"net/http"
+	"fmt"
+	"io/ioutil"
+)
 
 const (
 	METHOD_GET   = 1
@@ -8,6 +12,21 @@ const (
 	METHOD_PUT   = 3
 	METHOD_DELTE = 4
 )
+
+func httpHandler(w http.ResponseWriter, r *http.Request) {
+	if r.RequestURI != appUrl {
+		http.NotFound(w, r)
+		return
+	}
+	b, err := ioutil.ReadAll(r.Body)
+	//TODO ASSERT TYPE?
+	if err != nil {
+		logger.Error(err)
+		return
+	}
+
+	fmt.Printf("%s", b)
+}
 
 type Header struct {
 	headers map[string]string
@@ -20,25 +39,25 @@ func NewHeader() *Header {
 }
 func (h *Header) Get(name string) (string, error) {
 	if val, found := h.headers[name]; found {
-		return val, wellgo.OK
+		return val, OK
 	} else {
-		return "", wellgo.ErrValueNotFound
+		return "", ErrValueNotFound
 	}
 }
 
 func (h *Header) Set(name string, value string) error {
 	h.headers[name] = value
-	return wellgo.OK
+	return OK
 }
 
 type HttpRequest struct {
-	wellgo.Request
+	Request
 
 	header Header
 }
 
 type HttpResponse struct {
-	wellgo.Response
+	Response
 
 	header Header
 }
