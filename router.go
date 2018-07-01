@@ -5,14 +5,21 @@ import (
 	"errors"
 )
 
+var (
+	router *Router
+)
+
 type Router struct {
 	bindings *sync.Map
 }
 
-func InitRouter() *Router {
-	return &Router{
-		bindings: new(sync.Map),
+func GetRouter() *Router {
+	if router == nil {
+		router = &Router{
+			bindings: &sync.Map{},
+		}
 	}
+	return router
 }
 
 func (r *Router) Register(path string, controller *Controller) {
