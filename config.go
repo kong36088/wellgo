@@ -5,7 +5,6 @@ import (
 	"flag"
 	"github.com/larspensjo/config"
 	"fmt"
-	log "github.com/alecthomas/log4go"
 	"os"
 	"errors"
 	"path/filepath"
@@ -14,9 +13,9 @@ import (
 
 var (
 	conf       *Config
-	curPath, _  = filepath.Abs(filepath.Dir(os.Args[0]))
-	appPath        = curPath + "/conf/config.ini"
-	configFile  = flag.String("config", appPath+"config/config.ini", "General configuration file")
+	curPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
+	appPath    = curPath + "/conf/config.ini"
+	configFile = flag.String("config", appPath+"config/config.ini", "General configuration file")
 )
 
 type Config struct {
@@ -31,8 +30,8 @@ func NewConfig() *Config {
 	}
 }
 
-func GetConfigInstance() *Config{
-	if conf == nil{
+func GetConfigInstance() *Config {
+	if conf == nil {
 		InitConfig()
 	}
 	return conf
@@ -52,14 +51,14 @@ func InitConfig() error {
 	for _, s := range cfgSecs.Sections() {
 		options, err := cfgSecs.SectionOptions(s)
 		if err != nil {
-			log.Error("Read options of file %s s %s  failed, %s\n", *configFile, s, err)
+			logger.Error("Read options of file %s s %s  failed, %s\n", *configFile, s, err)
 			continue
 		}
 		section := &sync.Map{}
 		for _, v := range options {
 			option, err := cfgSecs.String(s, v)
 			if err != nil {
-				log.Error("Read file %s option %s failed, %s\n", *configFile, v, err)
+				logger.Error("Read file %s option %s failed, %s\n", *configFile, v, err)
 				continue
 			}
 			section.Store(v, option)
