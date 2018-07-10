@@ -1,8 +1,7 @@
 package request_parser
 
-type BaseParser interface{
+type BaseParser interface {
 	parse([]byte)
 
 	getRequestUrl()
 }
-

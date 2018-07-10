@@ -1,9 +1,9 @@
 package wellgo
 
 import (
-	"net/http"
 	"fmt"
 	"io/ioutil"
+	"net/http"
 )
 
 const (
@@ -54,6 +54,10 @@ type HttpRequest struct {
 	Request
 
 	header Header
+}
+
+func (httpReq *HttpRequest) getReqData() map[string]string {
+	//TODO get data
 }
 
 type HttpResponse struct {

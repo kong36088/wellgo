@@ -1,5 +1,12 @@
 package request_parser
 
-type JsonRequestParse struct{
+import (
+	"wellgo"
+)
+
+type JsonRequestParser struct {
+}
+
+func (jrp *JsonRequestParser) parse(args []byte) wellgo.Request {
 
 }

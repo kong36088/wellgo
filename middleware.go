@@ -1,5 +1,5 @@
 package wellgo
 
-type Middleware struct{
-
+type Middleware interface {
+	run()
 }
