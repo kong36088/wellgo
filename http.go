@@ -3,7 +3,7 @@ package wellgo
 import (
 	"fmt"
 	"io/ioutil"
-	"net/http"
+	netHttp "net/http"
 	"log"
 )
 
@@ -14,44 +14,50 @@ const (
 	METHOD_DELTE = 4
 )
 
-var(
-	appUrl string
+var (
+	http *Http
 )
 
-func servHttp() {
-	var(
-		addr string
-		err error
-	)
-	appUrl,err = conf.GetConfig("sys","app_url")
-	if err != nil{
-		log.Fatal(err)
-	}
-	addr, err = conf.GetConfig("sys", "addr")
-	if err != nil {
-		log.Fatal(err)
-	}
+type Http struct {
+	addr string
 
-	http.HandleFunc("/", httpHandler)
-	http.ListenAndServe(addr, nil)
+	appUrl string
 }
 
-func servHttps() {
+func getHttpInstance() *Http {
+	if http == nil {
+		var (
+			appUrl string
+			addr   string
+			err    error
+		)
+		appUrl, err = conf.GetConfig("sys", "app_url")
+		if err != nil {
+			log.Fatal(err)
+		}
+		addr, err = conf.GetConfig("sys", "addr")
+		if err != nil {
+			log.Fatal(err)
+		}
+		http = &Http{
+			addr:   addr,
+			appUrl: appUrl,
+		}
+	}
+	return http
+}
+
+func (http *Http) serveHttp() {
+	netHttp.HandleFunc("/", http.httpHandler)
+	netHttp.ListenAndServe(http.addr, nil)
+}
+
+func (http *Http) serveHttps() {
 	var (
-		addr string
 		cert string
 		key  string
-		err error
+		err  error
 	)
-	appUrl,err = conf.GetConfig("sys","app_url")
-	if err != nil{
-		log.Fatal(err)
-	}
-	addr, err = conf.GetConfig("sys", "addr")
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	cert, err = conf.GetConfig("sys", "cert")
 	if err != nil {
 		log.Fatal(err)
@@ -61,13 +67,13 @@ func servHttps() {
 		log.Fatal(err)
 	}
 
-	http.HandleFunc("/", httpHandler)
-	http.ListenAndServeTLS(addr, cert, key, nil)
+	netHttp.HandleFunc("/", http.httpHandler)
+	netHttp.ListenAndServeTLS(http.addr, cert, key, nil)
 }
 
-func httpHandler(w http.ResponseWriter, r *http.Request) {
-	if r.RequestURI != appUrl {
-		http.NotFound(w, r)
+func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
+	if r.RequestURI != http.appUrl {
+		netHttp.NotFound(w, r)
 		return
 	}
 	b, err := ioutil.ReadAll(r.Body)

@@ -30,9 +30,9 @@ func Run() {
 
 	switch proto {
 	case "http":
-		servHttp()
+		getHttpInstance().serveHttp()
 	case "https":
-		servHttps()
+		getHttpInstance().serveHttps()
 	case "tcp":
 	default:
 		log.Fatal("Please config your proto")
