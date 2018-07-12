@@ -3,7 +3,7 @@ package wellgo
 import "sync"
 
 type WContext struct {
-	proto string
+	proto *ProtoBase
 
 	req Request
 
@@ -12,16 +12,16 @@ type WContext struct {
 	middlewares *sync.Map
 }
 
-func newContext(proto string, req Request, resp Response) *WContext {
+func newContext(proto *ProtoBase, req Request, resp Response) *WContext {
 	return &WContext{
-		proto: proto,
-		req:   req,
-		resp:  resp,
+		proto:       proto,
+		req:         req,
+		resp:        resp,
 		middlewares: &sync.Map{},
 	}
 }
 
-func (wcont*WContext) regMiddleware(middleware *Middleware) error {
+func (wcont *WContext) regMiddleware(middleware *Middleware) error {
 	wcont.middlewares.Store(middleware, middleware)
 
 	return OK
@@ -33,11 +33,22 @@ func (wcont *WContext) delMiddleware(middleware *Middleware) error {
 	return OK
 }
 
-type Request struct {
-	url string
-	uri string
-	args map[string]string
+type ProtoBase struct {
+	addr string
 
+	appUrl string
+
+	RPChandler func(b []byte) Response
+}
+
+func (proto *ProtoBase) SetRPCHandler(rpcHandler func(b []byte) Response) {
+	proto.RPChandler = rpcHandler
+}
+
+type Request struct {
+	url  string
+	uri  string
+	args map[string]string
 }
 
 type Response struct {

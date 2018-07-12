@@ -19,9 +19,7 @@ var (
 )
 
 type Http struct {
-	addr string
-
-	appUrl string
+	ProtoBase
 }
 
 func getHttpInstance() *Http {
@@ -39,10 +37,9 @@ func getHttpInstance() *Http {
 		if err != nil {
 			log.Fatal(err)
 		}
-		http = &Http{
-			addr:   addr,
-			appUrl: appUrl,
-		}
+		http = &Http{}
+		http.addr = addr
+		http.appUrl = appUrl
 	}
 	return http
 }
@@ -71,6 +68,9 @@ func (http *Http) serveHttps() {
 	netHttp.ListenAndServeTLS(http.addr, cert, key, nil)
 }
 
+/**
+ * http 处理函数，分发请求至RPC处理器
+ */
 func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	if r.RequestURI != http.appUrl {
 		netHttp.NotFound(w, r)
@@ -84,6 +84,14 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	}
 
 	fmt.Printf("%s", b)
+
+	if http.RPChandler == nil{
+		log.Fatal("wellgo.http.RPChandler is not set")
+	}
+
+	rsp := http.RPChandler(b)
+
+	fmt.Println(rsp)
 }
 
 type Header struct {

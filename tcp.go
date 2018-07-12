@@ -9,6 +9,9 @@ type TCPResponse struct {
 	Response
 }
 
+type TCP struct{
+
+}
 
 func servTcp(){
 	
