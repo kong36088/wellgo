@@ -12,7 +12,7 @@ type Logger struct {
 	log4go.Logger
 }
 
-func GetLogger() *Logger {
+func GetLoggerInstance() *Logger {
 	if logger == nil {
 		logger = &Logger{}
 	}
@@ -28,6 +28,6 @@ func (logger *Logger) Init() error {
 	return OK
 }
 
-func (logger *Logger) CloseLog() {
-	logger.Close()
+func (logger *Logger) Close() {
+	logger.Logger.Close()
 }

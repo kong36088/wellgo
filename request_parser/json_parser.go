@@ -1,8 +1,6 @@
 package request_parser
 
-import (
-	"wellgo"
-)
+import "github.com/kong36088/wellgo"
 
 type JsonRequestParser struct {
 }

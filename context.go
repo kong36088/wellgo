@@ -1,5 +1,7 @@
 package wellgo
 
+import "sync"
+
 type WContext struct {
 	proto string
 
@@ -15,27 +17,28 @@ func newContext(proto string, req Request, resp Response) *WContext {
 		proto: proto,
 		req:   req,
 		resp:  resp,
-		middlewares & sync.Map{},
+		middlewares: &sync.Map{},
 	}
 }
 
-func (wcontext *WContext) regMiddleware(middleware *Middleware) error {
-	wcontext.middlewares.Store(middleware, middleware)
+func (wcont*WContext) regMiddleware(middleware *Middleware) error {
+	wcont.middlewares.Store(middleware, middleware)
 
 	return OK
 }
 
-func (wcontext *WContext) delMiddleware(middleware *Middleware) error {
-	wcontext.middlewares.Del(middleware)
+func (wcont *WContext) delMiddleware(middleware *Middleware) error {
+	wcont.middlewares.Delete(middleware)
 
 	return OK
 }
 
-type Request interface {
-	parseRequest()
-	getReqData()
+type Request struct {
+	url string
+	uri string
+	args map[string]string
+
 }
 
-type Response interface {
-	response()
+type Response struct {
 }

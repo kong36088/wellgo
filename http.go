@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"log"
 )
 
 const (
@@ -12,6 +13,57 @@ const (
 	METHOD_PUT   = 3
 	METHOD_DELTE = 4
 )
+
+var(
+	appUrl string
+)
+
+func servHttp() {
+	var(
+		addr string
+		err error
+	)
+	appUrl,err = conf.GetConfig("sys","app_url")
+	if err != nil{
+		log.Fatal(err)
+	}
+	addr, err = conf.GetConfig("sys", "addr")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	http.HandleFunc("/", httpHandler)
+	http.ListenAndServe(addr, nil)
+}
+
+func servHttps() {
+	var (
+		addr string
+		cert string
+		key  string
+		err error
+	)
+	appUrl,err = conf.GetConfig("sys","app_url")
+	if err != nil{
+		log.Fatal(err)
+	}
+	addr, err = conf.GetConfig("sys", "addr")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	cert, err = conf.GetConfig("sys", "cert")
+	if err != nil {
+		log.Fatal(err)
+	}
+	key, err = conf.GetConfig("sys", "key")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	http.HandleFunc("/", httpHandler)
+	http.ListenAndServeTLS(addr, cert, key, nil)
+}
 
 func httpHandler(w http.ResponseWriter, r *http.Request) {
 	if r.RequestURI != appUrl {

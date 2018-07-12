@@ -1,11 +1,15 @@
 package wellgo
 
-import "github.com/kong36088/wellgo"
 
 type TCPRequest struct {
-	wellgo.Request
+	Request
 }
 
 type TCPResponse struct {
-	wellgo.Response
+	Response
+}
+
+
+func servTcp(){
+	
 }
