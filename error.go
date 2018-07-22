@@ -10,4 +10,6 @@ var (
 	ErrParamError error = errors.New("param error")
 
 	ErrValueNotFound error = errors.New("value not found")
+
+	ErrInvalidInputParam error = errors.New("invalid input param")
 )

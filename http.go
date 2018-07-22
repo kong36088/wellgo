@@ -85,11 +85,18 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 
 	fmt.Printf("%s", b)
 
-	if http.RPChandler == nil{
+	if http.RPChandler == nil {
 		log.Fatal("wellgo.http.RPChandler is not set")
 	}
 
-	rsp := http.RPChandler(b)
+	req := &Request{
+		Url:      r.URL.String(),
+		Host:     r.URL.Host,
+		Uri:      r.URL.RequestURI(),
+		RawInput: b,
+	}
+
+	rsp := http.RPChandler(req)
 
 	fmt.Println(rsp)
 }
@@ -124,6 +131,7 @@ type HttpRequest struct {
 
 func (httpReq *HttpRequest) getReqData() map[string]string {
 	//TODO get data
+	return make(map[string]string)
 }
 
 type HttpResponse struct {

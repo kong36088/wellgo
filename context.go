@@ -38,18 +38,24 @@ type ProtoBase struct {
 
 	appUrl string
 
-	RPChandler func(b []byte) Response
+	RPChandler func(*Request) *Response
 }
 
-func (proto *ProtoBase) SetRPCHandler(rpcHandler func(b []byte) Response) {
+func (proto *ProtoBase) SetRPCHandler(rpcHandler func(*Request) *Response) {
 	proto.RPChandler = rpcHandler
 }
 
 type Request struct {
-	url  string
-	uri  string
-	args map[string]string
+	Url      string
+	Host     string
+	Uri      string
+	RawInput []byte
+	Args     map[string]interface{}
+	Interface string
 }
 
 type Response struct {
+	returnCode    int
+	returnMessage string
+	data          interface{}
 }
