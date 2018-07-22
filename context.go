@@ -33,25 +33,44 @@ func (wcont *WContext) delMiddleware(middleware *Middleware) error {
 	return OK
 }
 
+const (
+	ProtoHttp  = 1
+	ProtoHttps = 2
+	ProtoTcp   = 3
+)
+
+type ProtoType uint8
+
 type ProtoBase struct {
 	addr string
 
 	appUrl string
 
-	RPChandler func(*Request) *Response
+	RPChandler func(Request) *Response
 }
 
-func (proto *ProtoBase) SetRPCHandler(rpcHandler func(*Request) *Response) {
+func (proto *ProtoBase) SetRPCHandler(rpcHandler func(Request) *Response) {
 	proto.RPChandler = rpcHandler
 }
 
-type Request struct {
-	Url      string
-	Host     string
-	Uri      string
-	RawInput []byte
-	Args     map[string]interface{}
-	Interface string
+type Request interface {
+	GetProtoType() ProtoType
+	GetUrl() string
+	GetHost() string
+	GetUri() string
+	GetPath() string
+	GetRawInput() []byte
+	GetArgs() map[string]interface{}
+	GetInterface() string
+
+	SetProtoType(ProtoType)
+	SetUrl(string)
+	SetHost(string)
+	SetUri(string)
+	SetPath(string)
+	SetRawInput([]byte)
+	SetArgs(map[string]interface{})
+	SetInterface(string)
 }
 
 type Response struct {

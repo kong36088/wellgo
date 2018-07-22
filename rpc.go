@@ -38,20 +38,19 @@ type JsonRpcRsp struct {
 	Result interface{} `json:"result"`
 }
 
-
 // TODO 规范JSON-RPC返回格式
-func (rpc *RPC) jsonRPCHandler(req *Request) (*Request, error) {
+func (rpc *RPC) jsonRPCHandler(req Request) (*Request, error) {
 	var (
 		input    JsonRpcReq
 		inputMap map[string]interface{}
 	)
 
 	//读取json入参
-	err := json.Unmarshal(req.RawInput, input)
+	err := json.Unmarshal(req.GetRawInput(), input)
 	if err != nil {
 		return nil, err
 	}
-	req.Interface = input.Method
+	req.SetInterface(input.Method)
 
 	//处理入参
 	args := make(map[string]interface{})
@@ -62,7 +61,7 @@ func (rpc *RPC) jsonRPCHandler(req *Request) (*Request, error) {
 	for k, v := range inputMap {
 		args[k] = v
 	}
-	req.Args = args
+	req.SetArgs(args)
 
 	//传递到下一步
 

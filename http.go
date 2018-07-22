@@ -14,12 +14,87 @@ const (
 	METHOD_DELTE = 4
 )
 
+type HttpMethod uint8
+
 var (
 	http *Http
 )
 
+type HttpRequest struct {
+	Request
+
+	Url       string
+	Host      string
+	Uri       string
+	RawInput  []byte
+	Args      map[string]interface{}
+	Interface string
+
+	Method HttpMethod
+
+	Header *Header
+
+	ProtoType ProtoType
+}
+
 type Http struct {
 	ProtoBase
+}
+
+func (httpReq *HttpRequest) GetProtoType() ProtoType {
+	return httpReq.ProtoType
+}
+
+func (httpReq *HttpRequest) GetUrl() string {
+	return httpReq.Url
+}
+
+func (httpReq *HttpRequest) GetHost() string {
+	return httpReq.Host
+}
+
+func (httpReq *HttpRequest) GetUri() string {
+	return httpReq.Uri
+}
+
+func (httpReq *HttpRequest) GetRawInput() []byte {
+	return httpReq.RawInput
+}
+
+func (httpReq *HttpRequest) GetArgs() map[string]interface{} {
+	return httpReq.Args
+}
+
+func (httpReq *HttpRequest) GetInterface() string {
+	return httpReq.Interface
+}
+
+func (httpReq *HttpRequest) SetProtoType(protoType ProtoType) {
+	httpReq.ProtoType = protoType
+}
+
+func (httpReq *HttpRequest) SetUrl(url string) {
+	httpReq.Url = url
+}
+
+func (httpReq *HttpRequest) SetHost(host string) {
+	httpReq.Host = host
+}
+
+func (httpReq *HttpRequest) SetUri(uri string) {
+	httpReq.Uri = uri
+}
+
+func (httpReq *HttpRequest) SetRawInput(input []byte) {
+	httpReq.RawInput = input
+}
+
+func (httpReq *HttpRequest) SetArgs(args map[string]interface{}) {
+	httpReq.Args = args
+}
+
+func (httpReq *HttpRequest) SetInterface(interf string) {
+	httpReq.Interface = interf
 }
 
 func getHttpInstance() *Http {
@@ -89,44 +164,28 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 		log.Fatal("wellgo.http.RPChandler is not set")
 	}
 
-	req := &Request{
-		Url:      r.URL.String(),
-		Host:     r.URL.Host,
-		Uri:      r.URL.RequestURI(),
-		RawInput: b,
+	req := &HttpRequest{
+		Header: NewHeader(r.Header),
 	}
-
+	req.ProtoType = ProtoHttp
+	req.Url = r.URL.String()
+	req.Host = r.URL.Host
+	req.Uri = r.URL.RequestURI()
+	req.RawInput = b
 	rsp := http.RPChandler(req)
 
 	fmt.Println(rsp)
 }
 
 type Header struct {
-	headers map[string]string
+	Header netHttp.Header
+	//headers map[string]string
 }
 
-func NewHeader() *Header {
+func NewHeader(h netHttp.Header) *Header {
 	return &Header{
-		headers: make(map[string]string),
+		Header: h,
 	}
-}
-func (h *Header) Get(name string) (string, error) {
-	if val, found := h.headers[name]; found {
-		return val, OK
-	} else {
-		return "", ErrValueNotFound
-	}
-}
-
-func (h *Header) Set(name string, value string) error {
-	h.headers[name] = value
-	return OK
-}
-
-type HttpRequest struct {
-	Request
-
-	header Header
 }
 
 func (httpReq *HttpRequest) getReqData() map[string]string {
