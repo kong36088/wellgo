@@ -29,10 +29,10 @@ func Run() {
 
 	switch proto {
 	case "http":
-		getHttpInstance().SetRPCHandler(getRPCInstance().jsonRPCHandler)
+		getHttpInstance().SetRPCHandler(new(JsonRPC).RPCHandler)
 		getHttpInstance().serveHttp()
 	case "https":
-		getHttpInstance().SetRPCHandler(getRPCInstance().jsonRPCHandler)
+		getHttpInstance().SetRPCHandler(new(JsonRPC).RPCHandler)
 		getHttpInstance().serveHttps()
 	case "tcp":
 	default:

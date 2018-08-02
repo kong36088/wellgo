@@ -5,7 +5,6 @@
 package wellgo
 
 import (
-	"fmt"
 	"io/ioutil"
 	netHttp "net/http"
 	"log"
@@ -29,7 +28,23 @@ type Http struct {
 
 	appUrl string
 
-	rpcHandler func(Request) (Request, error)
+	rpc RPC
+}
+
+func (http *Http) Addr() string {
+	return http.addr
+}
+
+func (http *Http) AppUrl() string {
+	return http.appUrl
+}
+
+func (http *Http) RPC() RPC {
+	return http.rpc
+}
+
+func (http *Http) SetRPC(rpc RPC) {
+	http.rpc = rpc
 }
 
 type HttpRequest struct {
@@ -46,22 +61,6 @@ type HttpRequest struct {
 	Header *HttpHeader
 
 	ProtoType ProtoType
-}
-
-func (http *Http) Addr() string {
-	return http.addr
-}
-
-func (http *Http) AppUrl() string {
-	return http.appUrl
-}
-
-func (http *Http) RPCHandler() func(Request) (Request, error) {
-	return http.rpcHandler
-}
-
-func (http *Http) SetRPCHandler(rpcHandler func(Request) (Request, error)) {
-	http.rpcHandler = rpcHandler
 }
 
 func (req *HttpRequest) GetProtoType() ProtoType {
@@ -228,10 +227,10 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 		return
 	}
 
-	fmt.Printf("%s", b)
+	logger.Info("req=%s", b)
 
-	if http.rpcHandler == nil {
-		log.Fatal("wellgo.http.rpcHandler is not set")
+	if http.rpc == nil {
+		log.Fatal("wellgo.http.rpc is not set")
 	}
 
 	// init req
@@ -244,9 +243,10 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	req.Uri = r.URL.RequestURI()
 	req.RawInput = b
 
-	parsedReq, err = http.rpcHandler(req)
+	parsedReq, err = http.rpc.RPCHandler(req)
 	if err != nil {
-		// TODO error handler
+		output, _ := http.rpc.EncodeErrResponse(req, nil, err)
+		w.Write(output)
 		return
 	}
 
@@ -254,6 +254,8 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 
 	controller, err = router.Match(req.GetPath())
 	if err != nil {
+		output, _ := http.rpc.EncodeErrResponse(req, nil, err)
+		w.Write(output)
 		return
 	}
 

@@ -37,9 +37,9 @@ type ProtoInterface interface {
 
 	AppUrl() string
 
-	RPCHandler() (func(Request) (Request, error))
+	RPC() RPC
 
-	SetRPCHandler(func(Request) (Request, error))
+	SetRPC(RPC)
 }
 
 type Request interface {

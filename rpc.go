@@ -5,47 +5,35 @@
 package wellgo
 
 import (
-	"fmt"
 	"encoding/json"
 )
 
-var (
-	rpc *RPC
-)
+type RPC interface {
+	RPCHandler(Request) (Request, error)
 
-type RPC struct {
+	EncodeResponse(Request, Response) ([]byte, error)
+
+	EncodeErrResponse(Request, Response, error) ([]byte, error)
 }
 
-func getRPCInstance() *RPC {
-	if rpc == nil {
-		rpc = &RPC{}
-	}
-	return rpc
-}
-
-func (rpc *RPC) rpcHandler(req Request) Request {
-	inputStr := string(req.GetRawInput())
-	fmt.Println(inputStr)
-	return req
-}
-
-type JsonRpcReq struct {
+type JsonRPCReq struct {
 	Id      int64       `json:"id"`
 	Version float32     `json:"jsonrpc"`
 	Method  string      `json:"method"`
 	Param   interface{} `json:"param"`
 }
 
-type JsonRpcRsp struct {
+type JsonRPCRsp struct {
 	Id     int64       `json:"id"`
 	Error  interface{} `json:"error"`
 	Result interface{} `json:"result"`
 }
 
-// TODO 规范JSON-RPC返回格式
-func (rpc *RPC) jsonRPCHandler(req Request) (Request, error) {
+type JsonRPC struct{}
+
+func (j *JsonRPC) RPCHandler(req Request) (Request, error) {
 	var (
-		input    JsonRpcReq
+		input    JsonRPCReq
 		inputMap map[string]interface{}
 	)
 
@@ -70,6 +58,29 @@ func (rpc *RPC) jsonRPCHandler(req Request) (Request, error) {
 	return req, OK
 }
 
-func (rpc *RPC) jsonRPCResponseHandler(req Request, rsp Response) (string, error) {
+func (j *JsonRPC) EncodeResponse(req Request, rsp Response) ([]byte, error) {
+	var input JsonRPCReq
+	err := json.Unmarshal(req.GetRawInput(), input)
+	if err != nil {
+		logger.Error(err)
+	}
+	return json.Marshal(JsonRPCRsp{
+		Id:     input.Id,
+		Error:  nil,
+		Result: rsp.GetData(),
+	})
+}
 
+func (j *JsonRPC) EncodeErrResponse(req Request, rsp Response, err error) ([]byte, error) {
+	var input JsonRPCReq
+	err = json.Unmarshal(req.GetRawInput(), input)
+	if err != nil {
+		logger.Error(err)
+		return []byte(""), err
+	}
+	return json.Marshal(JsonRPCRsp{
+		Id:     input.Id,
+		Error:  rsp.GetReturnMessage(),
+		Result: rsp.GetData(),
+	})
 }
