@@ -1,3 +1,7 @@
+/**
+ * @author wellsjiang
+ */
+
 package wellgo
 
 import (
@@ -20,81 +24,141 @@ var (
 	http *Http
 )
 
-type HttpRequest struct {
-	Request
+type Http struct {
+	addr string
 
+	appUrl string
+
+	rpcHandler func(Request) (Request, error)
+}
+
+type HttpRequest struct {
 	Url       string
 	Host      string
 	Uri       string
+	Path      string
 	RawInput  []byte
 	Args      map[string]interface{}
 	Interface string
 
 	Method HttpMethod
 
-	Header *Header
+	Header *HttpHeader
 
 	ProtoType ProtoType
 }
 
-type Http struct {
-	ProtoBase
+func (http *Http) Addr() string {
+	return http.addr
 }
 
-func (httpReq *HttpRequest) GetProtoType() ProtoType {
-	return httpReq.ProtoType
+func (http *Http) AppUrl() string {
+	return http.appUrl
 }
 
-func (httpReq *HttpRequest) GetUrl() string {
-	return httpReq.Url
+func (http *Http) RPCHandler() func(Request) (Request, error) {
+	return http.rpcHandler
 }
 
-func (httpReq *HttpRequest) GetHost() string {
-	return httpReq.Host
+func (http *Http) SetRPCHandler(rpcHandler func(Request) (Request, error)) {
+	http.rpcHandler = rpcHandler
 }
 
-func (httpReq *HttpRequest) GetUri() string {
-	return httpReq.Uri
+func (req *HttpRequest) GetProtoType() ProtoType {
+	return req.ProtoType
 }
 
-func (httpReq *HttpRequest) GetRawInput() []byte {
-	return httpReq.RawInput
+func (req *HttpRequest) GetUrl() string {
+	return req.Url
 }
 
-func (httpReq *HttpRequest) GetArgs() map[string]interface{} {
-	return httpReq.Args
+func (req *HttpRequest) GetHost() string {
+	return req.Host
 }
 
-func (httpReq *HttpRequest) GetInterface() string {
-	return httpReq.Interface
+func (req *HttpRequest) GetUri() string {
+	return req.Uri
 }
 
-func (httpReq *HttpRequest) SetProtoType(protoType ProtoType) {
-	httpReq.ProtoType = protoType
+func (req *HttpRequest) GetPath() string {
+	return req.Path
 }
 
-func (httpReq *HttpRequest) SetUrl(url string) {
-	httpReq.Url = url
+func (req *HttpRequest) GetRawInput() []byte {
+	return req.RawInput
 }
 
-func (httpReq *HttpRequest) SetHost(host string) {
-	httpReq.Host = host
+func (req *HttpRequest) GetArgs() map[string]interface{} {
+	return req.Args
 }
 
-func (httpReq *HttpRequest) SetUri(uri string) {
-	httpReq.Uri = uri
+func (req *HttpRequest) GetInterface() string {
+	return req.Interface
 }
 
-func (httpReq *HttpRequest) SetRawInput(input []byte) {
-	httpReq.RawInput = input
+func (req *HttpRequest) GetHeader() HttpHeader {
+	return req.Header
 }
 
-func (httpReq *HttpRequest) SetArgs(args map[string]interface{}) {
-	httpReq.Args = args
+func (req *HttpRequest) SetProtoType(protoType ProtoType) {
+	req.ProtoType = protoType
 }
 
-func (httpReq *HttpRequest) SetInterface(interf string) {
-	httpReq.Interface = interf
+func (req *HttpRequest) SetUrl(url string) {
+	req.Url = url
+}
+
+func (req *HttpRequest) SetHost(host string) {
+	req.Host = host
+}
+
+func (req *HttpRequest) SetUri(uri string) {
+	req.Uri = uri
+}
+
+func (req *HttpRequest) SetPath(path string) {
+	req.Path = path
+}
+
+func (req *HttpRequest) SetRawInput(input []byte) {
+	req.RawInput = input
+}
+
+func (req *HttpRequest) SetArgs(args map[string]interface{}) {
+	req.Args = args
+}
+
+func (req *HttpRequest) SetInterface(interf string) {
+	req.Interface = interf
+}
+
+type HttpResponse struct {
+	ReturnCode    int
+	ReturnMessage string
+	Data          interface{}
+	Header        *HttpHeader
+}
+
+func (rsp *HttpResponse) GetReturnCode() int {
+	return rsp.ReturnCode
+}
+func (rsp *HttpResponse) GetReturnMessage() string {
+	return rsp.ReturnMessage
+}
+func (rsp *HttpResponse) GetData() interface{} {
+	return rsp.Data
+}
+func (rsp *HttpResponse) GetHeader() *HttpHeader {
+	return rsp.Header
+}
+func (rsp *HttpResponse) SetReturnCode(code int) {
+	rsp.ReturnCode = code
+}
+func (rsp *HttpResponse) SetReturnMessage(message string) {
+	rsp.ReturnMessage = message
+}
+func (rsp *HttpResponse) SetData(data interface{}) {
+	rsp.Data = data
 }
 
 func getHttpInstance() *Http {
@@ -144,9 +208,15 @@ func (http *Http) serveHttps() {
 }
 
 /**
- * http 处理函数，分发请求至RPC处理器
+ * http 处理函数
  */
 func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
+	var (
+		parsedReq  Request
+		controller *Controller
+		ctx        *WContext
+	)
+
 	if r.RequestURI != http.appUrl {
 		netHttp.NotFound(w, r)
 		return
@@ -160,10 +230,11 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 
 	fmt.Printf("%s", b)
 
-	if http.RPChandler == nil {
-		log.Fatal("wellgo.http.RPChandler is not set")
+	if http.rpcHandler == nil {
+		log.Fatal("wellgo.http.rpcHandler is not set")
 	}
 
+	// init req
 	req := &HttpRequest{
 		Header: NewHeader(r.Header),
 	}
@@ -172,29 +243,37 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	req.Host = r.URL.Host
 	req.Uri = r.URL.RequestURI()
 	req.RawInput = b
-	rsp := http.RPChandler(req)
 
-	fmt.Println(rsp)
+	parsedReq, err = http.rpcHandler(req)
+	if err != nil {
+		// TODO error handler
+		return
+	}
+
+	req = parsedReq.(*HttpRequest)
+
+	controller, err = router.Match(req.GetPath())
+	if err != nil {
+		return
+	}
+
+	//init rsp
+	rsp := &HttpResponse{}
+
+	ctx = newContext(http, req, rsp)
+
+	controller.Init(ctx)
+
+	controller.Run()
+
 }
 
-type Header struct {
-	Header netHttp.Header
-	//headers map[string]string
+type HttpHeader struct {
+	*netHttp.Header
 }
 
-func NewHeader(h netHttp.Header) *Header {
-	return &Header{
+func NewHeader(h netHttp.Header) *HttpHeader {
+	return &HttpHeader{
 		Header: h,
 	}
-}
-
-func (httpReq *HttpRequest) getReqData() map[string]string {
-	//TODO get data
-	return make(map[string]string)
-}
-
-type HttpResponse struct {
-	Response
-
-	header Header
 }

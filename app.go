@@ -5,12 +5,7 @@ import (
 )
 
 type App struct {
-	wcont *WContext
 }
-
-var (
-	wcontext *WContext
-)
 
 func Run() {
 	var (
@@ -34,17 +29,13 @@ func Run() {
 
 	switch proto {
 	case "http":
-		getHttpInstance().SetRPCHandler(getRPCInstance().rpcHandler)
+		getHttpInstance().SetRPCHandler(getRPCInstance().jsonRPCHandler)
 		getHttpInstance().serveHttp()
 	case "https":
-		getHttpInstance().SetRPCHandler(getRPCInstance().rpcHandler)
+		getHttpInstance().SetRPCHandler(getRPCInstance().jsonRPCHandler)
 		getHttpInstance().serveHttps()
 	case "tcp":
 	default:
 		log.Fatal("Please config your proto")
 	}
-}
-
-func GetWellGoContext() *WContext {
-	return wcontext
 }

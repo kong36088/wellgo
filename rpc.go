@@ -1,3 +1,7 @@
+/**
+ * @author wellsjiang
+ */
+
 package wellgo
 
 import (
@@ -19,10 +23,10 @@ func getRPCInstance() *RPC {
 	return rpc
 }
 
-func (rpc *RPC) rpcHandler(req *Request) *Response {
-	inputStr := string(req.RawInput)
+func (rpc *RPC) rpcHandler(req Request) Request {
+	inputStr := string(req.GetRawInput())
 	fmt.Println(inputStr)
-	return &Response{}
+	return req
 }
 
 type JsonRpcReq struct {
@@ -39,7 +43,7 @@ type JsonRpcRsp struct {
 }
 
 // TODO 规范JSON-RPC返回格式
-func (rpc *RPC) jsonRPCHandler(req Request) (*Request, error) {
+func (rpc *RPC) jsonRPCHandler(req Request) (Request, error) {
 	var (
 		input    JsonRpcReq
 		inputMap map[string]interface{}
@@ -63,6 +67,9 @@ func (rpc *RPC) jsonRPCHandler(req Request) (*Request, error) {
 	}
 	req.SetArgs(args)
 
-	//传递到下一步
+	return req, OK
+}
+
+func (rpc *RPC) jsonRPCResponseHandler(req Request, rsp Response) (string, error) {
 
 }

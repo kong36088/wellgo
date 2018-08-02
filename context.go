@@ -1,9 +1,13 @@
+/**
+ * @author wellsjiang
+ */
+
 package wellgo
 
 import "sync"
 
 type WContext struct {
-	proto *ProtoBase
+	proto ProtoInterface
 
 	req Request
 
@@ -12,25 +16,12 @@ type WContext struct {
 	middlewares *sync.Map
 }
 
-func newContext(proto *ProtoBase, req Request, resp Response) *WContext {
+func newContext(proto ProtoInterface, req Request, resp Response) *WContext {
 	return &WContext{
-		proto:       proto,
-		req:         req,
-		resp:        resp,
-		middlewares: &sync.Map{},
+		proto: proto,
+		req:   req,
+		resp:  resp,
 	}
-}
-
-func (wcont *WContext) regMiddleware(middleware *Middleware) error {
-	wcont.middlewares.Store(middleware, middleware)
-
-	return OK
-}
-
-func (wcont *WContext) delMiddleware(middleware *Middleware) error {
-	wcont.middlewares.Delete(middleware)
-
-	return OK
 }
 
 const (
@@ -41,16 +32,14 @@ const (
 
 type ProtoType uint8
 
-type ProtoBase struct {
-	addr string
+type ProtoInterface interface {
+	Addr() string
 
-	appUrl string
+	AppUrl() string
 
-	RPChandler func(Request) *Response
-}
+	RPCHandler() (func(Request) (Request, error))
 
-func (proto *ProtoBase) SetRPCHandler(rpcHandler func(Request) *Response) {
-	proto.RPChandler = rpcHandler
+	SetRPCHandler(func(Request) (Request, error))
 }
 
 type Request interface {
@@ -73,8 +62,12 @@ type Request interface {
 	SetInterface(string)
 }
 
-type Response struct {
-	returnCode    int
-	returnMessage string
-	data          interface{}
+type Response interface {
+	GetReturnCode() int
+	GetReturnMessage() string
+	GetData() interface{}
+
+	SetReturnCode(int)
+	SetReturnMessage(string)
+	SetData(interface{})
 }
