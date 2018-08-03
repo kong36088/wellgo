@@ -4,23 +4,19 @@
 
 package wellgo
 
-import "sync"
-
 type WContext struct {
-	proto ProtoInterface
+	Proto ProtoInterface
 
-	req Request
+	Req Request
 
-	resp Response
-
-	middlewares *sync.Map
+	Rsp Response
 }
 
 func newContext(proto ProtoInterface, req Request, resp Response) *WContext {
 	return &WContext{
-		proto: proto,
-		req:   req,
-		resp:  resp,
+		Proto: proto,
+		Req:   req,
+		Rsp:   resp,
 	}
 }
 
@@ -70,4 +66,7 @@ type Response interface {
 	SetReturnCode(int)
 	SetReturnMessage(string)
 	SetData(interface{})
+
+	Write([]byte)
+	WriteString(string)
 }

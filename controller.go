@@ -18,7 +18,7 @@ type Controller struct {
 
 func (c *Controller) Init(ctx *WContext) {
 	c.Ctx = ctx
-	c.Args = ctx.req.GetArgs()
+	c.Args = ctx.Req.GetArgs()
 }
 
 func (c *Controller) Run() {}

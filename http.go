@@ -61,6 +61,8 @@ type HttpRequest struct {
 	Header *HttpHeader
 
 	ProtoType ProtoType
+
+	R *netHttp.Request
 }
 
 func (req *HttpRequest) GetProtoType() ProtoType {
@@ -93,10 +95,6 @@ func (req *HttpRequest) GetArgs() map[string]interface{} {
 
 func (req *HttpRequest) GetInterface() string {
 	return req.Interface
-}
-
-func (req *HttpRequest) GetHeader() HttpHeader {
-	return req.Header
 }
 
 func (req *HttpRequest) SetProtoType(protoType ProtoType) {
@@ -136,6 +134,9 @@ type HttpResponse struct {
 	ReturnMessage string
 	Data          interface{}
 	Header        *HttpHeader
+	Proto         *Http
+
+	W netHttp.ResponseWriter
 }
 
 func (rsp *HttpResponse) GetReturnCode() int {
@@ -158,6 +159,18 @@ func (rsp *HttpResponse) SetReturnMessage(message string) {
 }
 func (rsp *HttpResponse) SetData(data interface{}) {
 	rsp.Data = data
+}
+func (rsp *HttpResponse) Write(content []byte) {
+	_, err := rsp.W.Write(content)
+	if err != nil {
+		logger.Error(err)
+	}
+}
+func (rsp *HttpResponse) WriteString(content string) {
+	_, err := rsp.W.Write([]byte(content))
+	if err != nil {
+		logger.Error(err)
+	}
 }
 
 func getHttpInstance() *Http {
@@ -227,21 +240,21 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 		return
 	}
 
-	logger.Info("req=%s", b)
+	logger.Info("Req=%s", b)
 
 	if http.rpc == nil {
 		log.Fatal("wellgo.http.rpc is not set")
 	}
 
-	// init req
+	// init Req
 	req := &HttpRequest{
-		Header: NewHeader(r.Header),
+		Header:    NewHeader(r.Header),
+		ProtoType: ProtoHttp,
+		Url:       r.URL.String(),
+		Uri:       r.URL.RequestURI(),
+		Host:      r.URL.Host,
+		RawInput:  b,
 	}
-	req.ProtoType = ProtoHttp
-	req.Url = r.URL.String()
-	req.Host = r.URL.Host
-	req.Uri = r.URL.RequestURI()
-	req.RawInput = b
 
 	parsedReq, err = http.rpc.RPCHandler(req)
 	if err != nil {
@@ -260,7 +273,9 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	}
 
 	//init rsp
-	rsp := &HttpResponse{}
+	rsp := &HttpResponse{
+		W: &w,
+	}
 
 	ctx = newContext(http, req, rsp)
 
@@ -275,7 +290,5 @@ type HttpHeader struct {
 }
 
 func NewHeader(h netHttp.Header) *HttpHeader {
-	return &HttpHeader{
-		Header: h,
-	}
+	return &HttpHeader{}
 }

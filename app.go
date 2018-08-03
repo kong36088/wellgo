@@ -22,20 +22,20 @@ func Run() {
 	if err = InitConfig(); err != nil {
 		log.Fatal(err)
 	}
-	proto, err := conf.GetConfig("sys", "proto")
+	proto, err := conf.GetConfig("sys", "Proto")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	switch proto {
 	case "http":
-		getHttpInstance().SetRPCHandler(new(JsonRPC).RPCHandler)
+		getHttpInstance().SetRPC(new(JsonRPC))
 		getHttpInstance().serveHttp()
 	case "https":
-		getHttpInstance().SetRPCHandler(new(JsonRPC).RPCHandler)
+		getHttpInstance().SetRPC(new(JsonRPC))
 		getHttpInstance().serveHttps()
 	case "tcp":
 	default:
-		log.Fatal("Please config your proto")
+		log.Fatal("Please config your Proto")
 	}
 }
