@@ -14,8 +14,7 @@ import (
 var (
 	conf       *Config
 	curPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
-	appPath    = curPath + "/conf/config.ini"
-	configFile = flag.String("config", appPath+"config/config.ini", "General configuration file")
+	configFile = flag.String("config", curPath+"config/config.ini", "General configuration file")
 )
 
 type Config struct {
@@ -23,6 +22,7 @@ type Config struct {
 }
 
 //topic list
+//TODO 热加载config or 每次重新加载config file
 
 func NewConfig() *Config {
 	return &Config{
