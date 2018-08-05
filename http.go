@@ -230,6 +230,7 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 		Url:       r.URL.String(),
 		Uri:       r.URL.RequestURI(),
 		Host:      r.URL.Host,
+		R:         r,
 	}
 	// init rsp
 	rsp := &HttpResponse{
@@ -272,7 +273,7 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 
 	req = parsedReq.(*HttpRequest)
 
-	controller, err = router.Match(req.GetPath())
+	controller, err = router.Match(req.GetInterface())
 	if err != nil {
 		output, _ := http.rpc.EncodeErrResponse(req, nil, err)
 		w.Write(output)
