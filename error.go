@@ -1,6 +1,8 @@
 package wellgo
 
-import "errors"
+import (
+	"errors"
+)
 
 var (
 	OK error = nil
@@ -13,3 +15,12 @@ var (
 
 	ErrInvalidInputParam error = errors.New("invalid input param")
 )
+
+/**
+ * 异常捕抓器
+ */
+func ErrorHandler(req Request, rsp Response) {
+	if err := recover(); err != nil {
+		rsp.WriteString(err.(string))
+	}
+}

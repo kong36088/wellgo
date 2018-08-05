@@ -223,6 +223,21 @@ func (http *Http) serveHttps() {
  * http 处理函数
  */
 func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
+	// init Req
+	req := &HttpRequest{
+		Header:    NewHeader(r.Header),
+		ProtoType: ProtoHttp,
+		Url:       r.URL.String(),
+		Uri:       r.URL.RequestURI(),
+		Host:      r.URL.Host,
+	}
+	// init rsp
+	rsp := &HttpResponse{
+		W: &w,
+	}
+	// error handler
+	defer ErrorHandler(req, rsp)
+
 	var (
 		parsedReq  Request
 		controller *Controller
@@ -246,15 +261,7 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 		log.Fatal("wellgo.http.rpc is not set")
 	}
 
-	// init Req
-	req := &HttpRequest{
-		Header:    NewHeader(r.Header),
-		ProtoType: ProtoHttp,
-		Url:       r.URL.String(),
-		Uri:       r.URL.RequestURI(),
-		Host:      r.URL.Host,
-		RawInput:  b,
-	}
+	req.RawInput = b
 
 	parsedReq, err = http.rpc.RPCHandler(req)
 	if err != nil {
@@ -270,11 +277,6 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 		output, _ := http.rpc.EncodeErrResponse(req, nil, err)
 		w.Write(output)
 		return
-	}
-
-	//init rsp
-	rsp := &HttpResponse{
-		W: &w,
 	}
 
 	ctx = newContext(http, req, rsp)
