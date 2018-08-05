@@ -20,6 +20,20 @@ func newContext(proto ProtoInterface, req Request, resp Response) *WContext {
 	}
 }
 
+func (ctx *WContext) Write(content []byte) {
+	logger.Info("write=" + string(content))
+
+	ctx.Rsp.Write(content)
+}
+
+func (ctx *WContext) WriteString(content string) {
+	logger.Info("write=" + content)
+
+	ctx.Rsp.WriteString(content)
+}
+
+
+
 const (
 	ProtoHttp  = 1
 	ProtoHttps = 2
