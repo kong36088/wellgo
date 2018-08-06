@@ -12,7 +12,7 @@ import (
 
 type JsonRPCReq struct {
 	Id      int64       `json:"id"`
-	Version float32     `json:"jsonrpc"`
+	Version float64     `json:"jsonrpc"`
 	Method  string      `json:"method"`
 	Param   interface{} `json:"param"`
 }
@@ -34,11 +34,11 @@ func (j *JsonRPC) RPCHandler(req Request) (Request, error) {
 
 	//判断Id
 	if input.Get("id").MustInt(0) == 0 {
-		return nil, ErrInvalidInputParam
+		return nil, ErrInvalidInputFormat
 	}
 	// 判断version
 	if input.Get("jsonrpc").MustFloat64(0) != 2.0 {
-		return nil, ErrInvalidInputParam
+		return nil, ErrInvalidInputFormat
 	}
 
 	//处理入参
@@ -46,7 +46,7 @@ func (j *JsonRPC) RPCHandler(req Request) (Request, error) {
 
 	args := input.Get("param").MustMap(make(map[string]interface{}))
 	if err != nil {
-		return nil, ErrInvalidInputParam
+		return nil, ErrInvalidInputFormat
 	}
 
 	req.SetArgs(args)

@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	netHttp "net/http"
 	"log"
+	"reflect"
 )
 
 const (
@@ -234,7 +235,7 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	}
 	// init rsp
 	rsp := &HttpResponse{
-		W: &w,
+		W: w,
 	}
 	// error handler
 	defer ErrorHandler(req, rsp)
@@ -273,6 +274,7 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 
 	req = parsedReq.(*HttpRequest)
 
+	// router
 	controller, err = router.Match(req.GetInterface())
 	if err != nil {
 		output, _ := http.rpc.EncodeErrResponse(req, nil, err)
@@ -282,7 +284,10 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 
 	ctx = newContext(http, req, rsp)
 
+	// controller process
 	controller.Init(ctx)
+
+	AssignJsonTo(ctx.Req.GetArgs(), reflect.ValueOf(controller), "param")
 
 	controller.Run()
 

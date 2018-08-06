@@ -13,14 +13,17 @@ var (
 
 	ErrValueNotFound error = errors.New("value not found")
 
-	ErrInvalidInputParam error = errors.New("invalid input param")
+	ErrInvalidInputFormat error = errors.New("invalid input format")
+
+	ErrInterfaceNotFound error = errors.New("interface not found")
 
 	ErrMap = map[error]int{
-		OK:                   0,
-		ErrSystemError:       1000,
-		ErrParamError:        1001,
-		ErrValueNotFound:     1002,
-		ErrInvalidInputParam: 1003,
+		OK:                    0,
+		ErrSystemError:        1000,
+		ErrParamError:         1001,
+		ErrValueNotFound:      1002,
+		ErrInvalidInputFormat: 1003,
+		ErrInterfaceNotFound:  1004,
 	}
 )
 

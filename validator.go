@@ -1,7 +1,13 @@
 package wellgo
 
-import "gopkg.in/go-playground/validator.v9"
+import (
+	"github.com/go-playground/validator"
+)
 
 type Validator struct{
 	validator.Validate
+}
+
+func (v *Validator) Vl(s interface{}) error{
+	return v.Struct(s)
 }

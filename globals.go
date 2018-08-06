@@ -19,6 +19,7 @@ import (
 func AssignJsonTo(src interface{}, dstVal reflect.Value, tagName string) bool {
 	sv := reflect.ValueOf(src)
 	if !dstVal.IsValid() || !sv.IsValid() {
+		logger.Warn("src or dstVal is invalid")
 		return false
 	}
 
@@ -32,6 +33,7 @@ func AssignJsonTo(src interface{}, dstVal reflect.Value, tagName string) bool {
 
 	// 判断可否赋值，小写字母开头的字段、常量等不可赋值
 	if !dstVal.CanSet() {
+		logger.Warn("dstVal can not set")
 		return false
 	}
 
@@ -58,7 +60,7 @@ func AssignJsonTo(src interface{}, dstVal reflect.Value, tagName string) bool {
 		dstVal.Set(reflect.ValueOf(src))
 	case reflect.Struct:
 		if sv.Kind() != reflect.Map || sv.Type().Key().Kind() != reflect.String {
-			fmt.Println(sv.Kind())
+			logger.Warn("AssignJsonTo src type only support map and key is only to be string")
 			return false
 		}
 

@@ -14,6 +14,7 @@ import (
 var (
 	conf       *Config
 	curPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
+	appPath    = curPath
 	configFile = flag.String("config", curPath+"config/config.ini", "General configuration file")
 )
 
@@ -78,7 +79,7 @@ func (c *Config) GetConfig(section string, option string) (string, error) {
 		return "", errors.New(fmt.Sprintf("config section '%s' not found", section))
 	}
 
-	if optionCfg, found = sectionCfg.(sync.Map).Load(option); !found {
+	if optionCfg, found = sectionCfg.(map[string]string)[option]; !found {
 		return "", errors.New(fmt.Sprintf("config option '%s' not found", option))
 	}
 
