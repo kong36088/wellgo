@@ -5,7 +5,10 @@
 
 package wellgo
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"github.com/bitly/go-simplejson"
+)
 
 type JsonRPCReq struct {
 	Id      int64       `json:"id"`
@@ -23,54 +26,55 @@ type JsonRPCRsp struct {
 type JsonRPC struct{}
 
 func (j *JsonRPC) RPCHandler(req Request) (Request, error) {
-	var (
-		input    JsonRPCReq
-		inputMap map[string]interface{}
-	)
-
 	//读取json入参
-	err := json.Unmarshal(req.GetRawInput(), input)
+	input, err := simplejson.NewJson(req.GetRawInput())
 	if err != nil {
 		return nil, err
 	}
-	req.SetInterface(input.Method)
+
+	//判断Id
+	if input.Get("id").MustInt(0) == 0 {
+		return nil, ErrInvalidInputParam
+	}
+	// 判断version
+	if input.Get("jsonrpc").MustFloat64(0) != 2.0 {
+		return nil, ErrInvalidInputParam
+	}
 
 	//处理入参
-	args := make(map[string]interface{})
-	inputMap, err = input.Param.(map[string]interface{})
+	req.SetInterface(input.Get("method").MustString(""))
+
+	args := input.Get("param").MustMap(make(map[string]interface{}))
 	if err != nil {
 		return nil, ErrInvalidInputParam
 	}
-	for k, v := range inputMap {
-		args[k] = v
-	}
+
 	req.SetArgs(args)
 
 	return req, OK
 }
 
 func (j *JsonRPC) EncodeResponse(req Request, rsp Response) ([]byte, error) {
-	var input JsonRPCReq
-	err := json.Unmarshal(req.GetRawInput(), input)
+	input, err := simplejson.NewJson(req.GetRawInput())
 	if err != nil {
 		logger.Error(err)
+		return []byte(""), err
 	}
 	return json.Marshal(JsonRPCRsp{
-		Id:     input.Id,
+		Id:     input.Get("id").MustInt64(0),
 		Error:  nil,
 		Result: rsp.GetData(),
 	})
 }
 
 func (j *JsonRPC) EncodeErrResponse(req Request, rsp Response, err error) ([]byte, error) {
-	var input JsonRPCReq
-	err = json.Unmarshal(req.GetRawInput(), input)
+	input, err := simplejson.NewJson(req.GetRawInput())
 	if err != nil {
 		logger.Error(err)
 		return []byte(""), err
 	}
 	return json.Marshal(JsonRPCRsp{
-		Id:     input.Id,
+		Id:     input.Get("id").MustInt64(0),
 		Error:  rsp.GetReturnMessage(),
 		Result: rsp.GetData(),
 	})
