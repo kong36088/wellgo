@@ -31,6 +31,6 @@ func (r *Router) Match(path string) (*Controller, error) {
 	if controller, found := r.bindings.Load(path); !found {
 		return nil, errors.New("path not found")
 	} else {
-		return controller.(*Controller), OK
+		return controller.(*Controller), nil
 	}
 }

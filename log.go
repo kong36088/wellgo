@@ -25,7 +25,7 @@ func (logger *Logger) Init() error {
 		return err
 	}
 	logger.LoadConfiguration(appPath + logPath)
-	return OK
+	return nil
 }
 
 func (logger *Logger) Close() {

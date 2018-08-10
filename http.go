@@ -244,16 +244,14 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	// error handler
 	defer ErrorHandler(ctx)
 
+	// judge url
 	if r.RequestURI != http.appUrl {
 		netHttp.NotFound(w, r)
 		return
 	}
+	// read request body
 	b, err := ioutil.ReadAll(r.Body)
-	//TODO ASSERT TYPE?
-	if err != nil {
-		logger.Error(err)
-		return
-	}
+	Assert(err != nil, NewWException(err.Error()))
 
 	logger.Info("Req=%s", b)
 
@@ -277,7 +275,7 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 
 	AssignJsonTo(ctx.Req.GetArgs(), reflect.ValueOf(controller), "param")
 
-	controller.Run()
+	http.RPC().EncodeResponse(ctx, controller.Run())
 
 }
 

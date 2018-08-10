@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	OK error = nil
+	OK error = errors.New("")
 
 	ErrSystemError error = errors.New("system error")
 

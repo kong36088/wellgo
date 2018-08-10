@@ -7,7 +7,7 @@ package wellgo
 
 type ControllerInterface interface {
 	Init(*WContext)
-	Run()
+	Run() Result
 }
 
 type Controller struct {
@@ -21,4 +21,6 @@ func (c *Controller) Init(ctx *WContext) {
 	c.Args = ctx.Req.GetArgs()
 }
 
-func (c *Controller) Run() {}
+func (c *Controller) Run() Result {
+	return NewResult(0, OK.Error())
+}

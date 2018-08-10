@@ -83,7 +83,7 @@ func (c *Config) GetConfig(section string, option string) (string, error) {
 		return "", errors.New(fmt.Sprintf("config option '%s' not found", option))
 	}
 
-	return optionCfg.(string), OK
+	return optionCfg.(string), nil
 }
 
 func (c *Config) GetSection(section string) (sync.Map, error) {
@@ -95,7 +95,7 @@ func (c *Config) GetSection(section string) (sync.Map, error) {
 		return sync.Map{}, errors.New(fmt.Sprintf("config section '%s' not found", section))
 	}
 
-	return sectionCfg.(sync.Map), OK
+	return sectionCfg.(sync.Map), nil
 }
 
 func (c *Config) GetAllConfig() sync.Map {

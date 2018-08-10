@@ -57,7 +57,7 @@ func (j *JsonRPC) RPCHandler(req Request) (Request, error) {
 
 	req.SetArgs(args)
 
-	return req, OK
+	return req, nil
 }
 
 //TODO encode result
