@@ -84,9 +84,7 @@ func (j *JsonRPC) EncodeResponse(ctx *WContext, result Result) ([]byte, error) {
 func (j *JsonRPC) EncodeErrResponse(ctx *WContext, result Result) ([]byte, error) {
 	var id string
 	input, err := simplejson.NewJson(ctx.Req.GetRawInput())
-	if err != nil {
-		logger.Error(err)
-	}else{
+	if err == nil {
 		id = input.Get("id").MustString()
 	}
 

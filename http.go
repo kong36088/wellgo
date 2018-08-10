@@ -228,11 +228,11 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 
 	// init Req
 	req := &HttpRequest{
-		Header:    NewHeader(r.Header),
-		Url:       r.URL.String(),
-		Uri:       r.URL.RequestURI(),
-		Host:      r.URL.Host,
-		R:         r,
+		Header: NewHeader(r.Header),
+		Url:    r.URL.String(),
+		Uri:    r.URL.RequestURI(),
+		Host:   r.URL.Host,
+		R:      r,
 	}
 	// init rsp
 	rsp := &HttpResponse{
@@ -264,21 +264,13 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	req.RawInput = b
 
 	parsedReq, err = http.rpc.RPCHandler(req)
-	if err != nil {
-		output, _ := http.rpc.EncodeErrResponse(req, nil, err)
-		w.Write(output)
-		return
-	}
+	Assert(err != nil, NewWException(err.Error()))
 
 	req = parsedReq.(*HttpRequest)
 
 	// router
 	controller, err = router.Match(req.GetInterface())
-	if err != nil {
-		output, _ := http.rpc.EncodeErrResponse(req, nil, err)
-		w.Write(output)
-		return
-	}
+	Assert(err != nil, NewWException(err.Error()))
 
 	// controller process
 	controller.Init(ctx)

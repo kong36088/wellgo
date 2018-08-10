@@ -117,3 +117,25 @@ func AssignJsonTo(src interface{}, dstVal reflect.Value, tagName string) bool {
 
 	return true
 }
+
+// assertion function
+// default return system error
+func Assert(expression bool, we ...WException) {
+	if len(we) > 1 {
+		panic("wellgo.Assert only allow 1 WException")
+	}
+	if !expression {
+		var (
+			e WException
+		)
+		if len(we) == 1 {
+			e = we[0]
+		} else {
+			e = NewWException(ErrSystemError.Error(), GetErrorCode(ErrSystemError))
+		}
+		if e.Code == 0 {
+			e.Code = GetErrorCode(ErrSystemError)
+		}
+		panic(e)
+	}
+}

@@ -10,6 +10,7 @@ import (
 	"github.com/bitly/go-simplejson"
 	"reflect"
 	"fmt"
+	"errors"
 )
 
 type TestS struct {
@@ -54,4 +55,26 @@ func TestAssignJsonTo(t *testing.T) {
 		t.Fail()
 	}
 	tt.Print()
+}
+
+func TestAssert(t *testing.T) {
+	var code int64 = 123
+	msg := "test exception"
+
+	defer func() {
+		if err := recover(); err != nil {
+			e, _ := err.(WException)
+			if e.Message != msg || e.Code != int64(code) {
+				t.Log(e)
+				t.Error(e.Message, e.Code)
+			}
+		}
+	}()
+
+	Assert(true)
+
+	Assert(1 == 1)
+
+	Assert(1 == 2, NewWException(errors.New(msg).Error(), code))
+
 }
