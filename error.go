@@ -37,11 +37,31 @@ func RegisterErrorMap(em map[error]int) {
 	}
 }
 
+func ErrorExists(err error) bool {
+	_, ex := ErrMap[err]
+	return ex
+}
+
+func GetErrorCode(err error) int {
+	code, found := ErrMap[err]
+	if !found {
+		return -1
+	}
+	return code
+}
+
 /**
  * 异常捕抓器
  */
-func ErrorHandler(req Request, rsp Response) {
+func ErrorHandler(ctx *WContext) {
 	if err := recover(); err != nil {
-		rsp.WriteString(err.(string))
+		e, _ := err.(error)
+		code := GetErrorCode(e)
+		if code == -1 {
+			e = ErrSystemError
+			code = GetErrorCode(e)
+		}
+
+		ctx.Proto.RPC().EncodeErrResponse(ctx, NewResult(int64(code), e.Error()))
 	}
 }

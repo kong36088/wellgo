@@ -50,10 +50,12 @@ type ProtoInterface interface {
 	RPC() RPC
 
 	SetRPC(RPC)
+
+	GetProtoType() ProtoType
+	SetProtoType(ProtoType)
 }
 
 type Request interface {
-	GetProtoType() ProtoType
 	GetUrl() string
 	GetHost() string
 	GetUri() string
@@ -62,7 +64,6 @@ type Request interface {
 	GetArgs() map[string]interface{}
 	GetInterface() string
 
-	SetProtoType(ProtoType)
 	SetUrl(string)
 	SetHost(string)
 	SetUri(string)

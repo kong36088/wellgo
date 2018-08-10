@@ -7,7 +7,7 @@ package wellgo
 type RPC interface {
 	RPCHandler(Request) (Request, error)
 
-	EncodeResponse(Request, Response) ([]byte, error)
+	EncodeResponse(*WContext, Result) ([]byte, error)
 
-	EncodeErrResponse(Request, Response, error) ([]byte, error)
+	EncodeErrResponse(*WContext, Result) ([]byte, error)
 }

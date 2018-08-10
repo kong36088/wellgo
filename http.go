@@ -30,6 +30,8 @@ type Http struct {
 	appUrl string
 
 	rpc RPC
+
+	ProtoType ProtoType
 }
 
 func (http *Http) Addr() string {
@@ -47,6 +49,12 @@ func (http *Http) RPC() RPC {
 func (http *Http) SetRPC(rpc RPC) {
 	http.rpc = rpc
 }
+func (http *Http) GetProtoType() ProtoType {
+	return http.ProtoType
+}
+func (http *Http) SetProtoType(ptt ProtoType) {
+	http.ProtoType = ptt
+}
 
 type HttpRequest struct {
 	Url       string
@@ -61,13 +69,7 @@ type HttpRequest struct {
 
 	Header *HttpHeader
 
-	ProtoType ProtoType
-
 	R *netHttp.Request
-}
-
-func (req *HttpRequest) GetProtoType() ProtoType {
-	return req.ProtoType
 }
 
 func (req *HttpRequest) GetUrl() string {
@@ -96,10 +98,6 @@ func (req *HttpRequest) GetArgs() map[string]interface{} {
 
 func (req *HttpRequest) GetInterface() string {
 	return req.Interface
-}
-
-func (req *HttpRequest) SetProtoType(protoType ProtoType) {
-	req.ProtoType = protoType
 }
 
 func (req *HttpRequest) SetUrl(url string) {
@@ -135,7 +133,6 @@ type HttpResponse struct {
 	ReturnMessage string
 	Data          interface{}
 	Header        *HttpHeader
-	Proto         *Http
 
 	W netHttp.ResponseWriter
 }
@@ -224,10 +221,14 @@ func (http *Http) serveHttps() {
  * http 处理函数
  */
 func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
+	var (
+		parsedReq  Request
+		controller *Controller
+	)
+
 	// init Req
 	req := &HttpRequest{
 		Header:    NewHeader(r.Header),
-		ProtoType: ProtoHttp,
 		Url:       r.URL.String(),
 		Uri:       r.URL.RequestURI(),
 		Host:      r.URL.Host,
@@ -237,14 +238,11 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	rsp := &HttpResponse{
 		W: w,
 	}
-	// error handler
-	defer ErrorHandler(req, rsp)
+	// init ctx
+	ctx := newContext(http, req, rsp)
 
-	var (
-		parsedReq  Request
-		controller *Controller
-		ctx        *WContext
-	)
+	// error handler
+	defer ErrorHandler(ctx)
 
 	if r.RequestURI != http.appUrl {
 		netHttp.NotFound(w, r)
@@ -281,8 +279,6 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 		w.Write(output)
 		return
 	}
-
-	ctx = newContext(http, req, rsp)
 
 	// controller process
 	controller.Init(ctx)

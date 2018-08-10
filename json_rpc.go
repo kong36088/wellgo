@@ -11,16 +11,22 @@ import (
 )
 
 type JsonRPCReq struct {
-	Id      int64       `json:"id"`
+	Id      string      `json:"id"`
 	Version float64     `json:"jsonrpc"`
 	Method  string      `json:"method"`
 	Param   interface{} `json:"param"`
 }
 
 type JsonRPCRsp struct {
-	Id     int64       `json:"id"`
-	Error  interface{} `json:"error"`
-	Result interface{} `json:"result"`
+	Id      string        `json:"id"`
+	Version float64       `json:"jsonrpc"`
+	Error   JsonRPCRspErr `json:"error"`
+	Result  interface{}   `json:"result"`
+}
+
+type JsonRPCRspErr struct {
+	Code    int64  `json:"code"`
+	Message string `json:"message"`
 }
 
 type JsonRPC struct{}
@@ -54,28 +60,42 @@ func (j *JsonRPC) RPCHandler(req Request) (Request, error) {
 	return req, OK
 }
 
-func (j *JsonRPC) EncodeResponse(req Request, rsp Response) ([]byte, error) {
-	input, err := simplejson.NewJson(req.GetRawInput())
+//TODO encode result
+func (j *JsonRPC) EncodeResponse(ctx *WContext, result Result) ([]byte, error) {
+	var output []byte
+	input, err := simplejson.NewJson(ctx.Req.GetRawInput())
 	if err != nil {
+		output, _ = json.Marshal(JsonRPCRsp{
+			Id:      input.Get("id").MustString(),
+			Version: 2.0,
+			Result:  ctx.Rsp.GetData(),
+		})
 		logger.Error(err)
-		return []byte(""), err
+		return output, err
 	}
+
 	return json.Marshal(JsonRPCRsp{
-		Id:     input.Get("id").MustInt64(0),
-		Error:  nil,
-		Result: rsp.GetData(),
+		Id:      input.Get("id").MustString(),
+		Version: 2.0,
+		Result:  ctx.Rsp.GetData(),
 	})
 }
 
-func (j *JsonRPC) EncodeErrResponse(req Request, rsp Response, err error) ([]byte, error) {
-	input, err := simplejson.NewJson(req.GetRawInput())
+func (j *JsonRPC) EncodeErrResponse(ctx *WContext, result Result) ([]byte, error) {
+	var id string
+	input, err := simplejson.NewJson(ctx.Req.GetRawInput())
 	if err != nil {
 		logger.Error(err)
-		return []byte(""), err
+	}else{
+		id = input.Get("id").MustString()
 	}
+
 	return json.Marshal(JsonRPCRsp{
-		Id:     input.Get("id").MustInt64(0),
-		Error:  rsp.GetReturnMessage(),
-		Result: rsp.GetData(),
+		Id:      id,
+		Version: 2.0,
+		Error: JsonRPCRspErr{
+			Code:    result.GetCode(),
+			Message: result.GetMessage(),
+		},
 	})
 }
