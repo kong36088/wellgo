@@ -104,6 +104,6 @@ func ErrorHandler(ctx *WContext) {
 			return
 		}
 
-		ctx.Proto.RPC().EncodeErrResponse(ctx, NewResult(code, message))
+		ctx.Proto.GetRPC().EncodeErrResponse(ctx, *NewResult(code, message))
 	}
 }

@@ -47,7 +47,7 @@ type ProtoInterface interface {
 
 	AppUrl() string
 
-	RPC() RPC
+	GetRPC() RPC
 
 	SetRPC(RPC)
 

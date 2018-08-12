@@ -68,7 +68,7 @@ func (j *JsonRPC) EncodeResponse(ctx *WContext, result Result) ([]byte, error) {
 		output, _ = json.Marshal(JsonRPCRsp{
 			Id:      input.Get("id").MustString(),
 			Version: 2.0,
-			Result:  ctx.Rsp.GetData(),
+			Result:  result.GetData(),
 		})
 		logger.Error(err)
 		return output, err
@@ -77,7 +77,7 @@ func (j *JsonRPC) EncodeResponse(ctx *WContext, result Result) ([]byte, error) {
 	return json.Marshal(JsonRPCRsp{
 		Id:      input.Get("id").MustString(),
 		Version: 2.0,
-		Result:  ctx.Rsp.GetData(),
+		Result:  result.GetData(),
 	})
 }
 

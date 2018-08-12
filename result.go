@@ -15,7 +15,7 @@ type Result struct {
 	Data          interface{} `json:"data"`
 }
 
-func NewResult(code int64, message string, data ...interface{}) Result {
+func NewResult(code int64, message string, data ...interface{}) *Result {
 	var d interface{}
 	if len(data) > 0 {
 		d = data[0]
@@ -23,7 +23,7 @@ func NewResult(code int64, message string, data ...interface{}) Result {
 		d = nil
 	}
 
-	return Result{
+	return &Result{
 		ReturnCode:    code,
 		ReturnMessage: message,
 		Data:          d,

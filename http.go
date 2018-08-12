@@ -42,7 +42,7 @@ func (http *Http) AppUrl() string {
 	return http.appUrl
 }
 
-func (http *Http) RPC() RPC {
+func (http *Http) GetRPC() RPC {
 	return http.rpc
 }
 
@@ -217,6 +217,7 @@ func (http *Http) serveHttps() {
 	netHttp.ListenAndServeTLS(http.addr, cert, key, nil)
 }
 
+//TODO write headers
 /**
  * http 处理函数
  */
@@ -275,7 +276,9 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 
 	AssignJsonTo(ctx.Req.GetArgs(), reflect.ValueOf(controller), "param")
 
-	http.RPC().EncodeResponse(ctx, controller.Run())
+	result := controller.Run()
+
+	http.GetRPC().EncodeResponse(ctx, *result)
 
 }
 
