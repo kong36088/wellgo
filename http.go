@@ -31,6 +31,8 @@ type Http struct {
 
 	rpc RPC
 
+	conf *Config
+
 	ProtoType ProtoType
 }
 
@@ -178,15 +180,18 @@ func getHttpInstance() *Http {
 			addr   string
 			err    error
 		)
-		appUrl, err = conf.GetConfig("sys", "app_url")
+		http = &Http{
+			conf: NewConfig(),
+		}
+		appUrl, err = http.conf.Get("config", "sys", "app_url")
 		if err != nil {
 			log.Fatal(err)
 		}
-		addr, err = conf.GetConfig("sys", "addr")
+		addr, err = http.conf.Get("conf", "sys", "addr")
 		if err != nil {
 			log.Fatal(err)
 		}
-		http = &Http{}
+
 		http.addr = addr
 		http.appUrl = appUrl
 	}
@@ -204,12 +209,11 @@ func (http *Http) serveHttps() {
 		key  string
 		err  error
 	)
-	cert, err = conf.GetConfig("sys", "cert")
-	if err != nil {
+	if cert, err = http.conf.Get("config", "sys", "cert"); err != nil {
 		log.Fatal(err)
 	}
-	key, err = conf.GetConfig("sys", "key")
-	if err != nil {
+
+	if key, err = http.conf.Get("config", "sys", "key"); err != nil {
 		log.Fatal(err)
 	}
 
@@ -240,7 +244,11 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 		W: w,
 	}
 	// init ctx
-	ctx := newContext(http, req, rsp)
+	ctx := newContext()
+	ctx.Config = NewConfig()
+	ctx.Proto = http
+	ctx.Req = req
+	ctx.Rsp = rsp
 
 	// error handler
 	defer ErrorHandler(ctx)

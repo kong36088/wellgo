@@ -10,13 +10,12 @@ type WContext struct {
 	Req Request
 
 	Rsp Response
+
+	Config *Config
 }
 
-func newContext(proto ProtoInterface, req Request, resp Response) *WContext {
+func newContext() *WContext {
 	return &WContext{
-		Proto: proto,
-		Req:   req,
-		Rsp:   resp,
 	}
 }
 

@@ -19,10 +19,8 @@ func Run() {
 	defer logger.Close()
 
 	//初始化配置模块
-	if err = InitConfig(); err != nil {
-		log.Fatal(err)
-	}
-	proto, err := conf.GetConfig("sys", "Proto")
+	conf := NewConfig()
+	proto, err := conf.Get("config", "sys", "Proto")
 	if err != nil {
 		log.Fatal(err)
 	}

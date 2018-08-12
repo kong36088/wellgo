@@ -1,24 +1,23 @@
 package wellgo
 
 import (
-	"runtime"
-	"flag"
 	"github.com/larspensjo/config"
 	"fmt"
 	"os"
 	"errors"
 	"path/filepath"
 	"sync"
+	"github.com/emirpasic/gods/sets/treeset"
 )
 
 var (
-	conf       *Config
 	curPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 	appPath    = curPath
-	configFile = flag.String("config", curPath+"config/config.ini", "General configuration file")
 )
 
+// threadsafe config
 type Config struct {
+	files  *treeset.Set
 	values *sync.Map
 }
 
@@ -27,75 +26,98 @@ type Config struct {
 
 func NewConfig() *Config {
 	return &Config{
+		files:  treeset.NewWithStringComparator(),
 		values: &sync.Map{},
 	}
 }
 
-func GetConfigInstance() *Config {
-	if conf == nil {
-		InitConfig()
+func (c *Config) LoadConfig(configFile string) error {
+	configFile = curPath + "config/" + configFile + ".ini"
+	if c.files.Contains(configFile) {
+		return nil
 	}
-	return conf
-}
 
-func InitConfig() error {
-	conf = NewConfig()
-
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	flag.Parse()
-
-	cfgSecs, err := config.ReadDefault(*configFile)
+	cfgSecs, err := config.ReadDefault(configFile)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Fail to find %s %s", *configFile, err))
+		return errors.New(fmt.Sprintf("Fail to find %s %s", configFile, err))
 	}
 
+	fileConfigs := &sync.Map{}
+	// parse config contents
 	for _, s := range cfgSecs.Sections() {
 		options, err := cfgSecs.SectionOptions(s)
 		if err != nil {
-			logger.Error("Read options of file %s s %s  failed, %s\n", *configFile, s, err)
+			logger.Error("Read options of file %s s %s  failed, %s\n", configFile, s, err)
 			continue
 		}
 		section := &sync.Map{}
 		for _, v := range options {
 			option, err := cfgSecs.String(s, v)
 			if err != nil {
-				logger.Error("Read file %s option %s failed, %s\n", *configFile, v, err)
+				logger.Error("Read file %s option %s failed, %s\n", configFile, v, err)
 				continue
 			}
 			section.Store(v, option)
 		}
-		conf.values.Store(s, section)
+		c.values.Store(s, section)
 	}
+	// record config file
+	c.files.Add(configFile)
+	c.values.Store(configFile, fileConfigs)
+
 	return nil
 }
 
-func (c *Config) GetConfig(section string, option string) (string, error) {
+func (c *Config) Get(file string, section string, option string) (string, error) {
 	var (
+		fileCfg    interface{}
 		sectionCfg interface{}
 		optionCfg  interface{}
 		found      bool
 	)
-	if sectionCfg, found = c.values.Load(section); !found {
+	if err := c.LoadConfig(file); err != nil {
+		return "", err
+	}
+
+	if fileCfg, found = c.values.Load(file); !found {
+		return "", errors.New(fmt.Sprintf("config file '%s' not found", file))
+	}
+	if sectionCfg, found = fileCfg.(*sync.Map).Load(section); !found {
 		return "", errors.New(fmt.Sprintf("config section '%s' not found", section))
 	}
 
-	if optionCfg, found = sectionCfg.(map[string]string)[option]; !found {
+	if optionCfg, found = sectionCfg.(*sync.Map).Load(option); !found {
 		return "", errors.New(fmt.Sprintf("config option '%s' not found", option))
 	}
 
 	return optionCfg.(string), nil
 }
 
-func (c *Config) GetSection(section string) (sync.Map, error) {
+func (c *Config) GetSection(file string, section string) (sync.Map, error) {
 	var (
+		fileCfg    interface{}
 		sectionCfg interface{}
 		found      bool
 	)
-	if sectionCfg, found = c.values.Load(section); !found {
+	if err := c.LoadConfig(file); err != nil {
+		return sync.Map{}, err
+	}
+	if fileCfg, found = c.values.Load(file); !found {
+		return sync.Map{}, errors.New(fmt.Sprintf("config file '%s' not found", file))
+	}
+	if sectionCfg, found = fileCfg.(*sync.Map).Load(section); !found {
 		return sync.Map{}, errors.New(fmt.Sprintf("config section '%s' not found", section))
 	}
 
-	return sectionCfg.(sync.Map), nil
+	return *(sectionCfg.(*sync.Map)), nil
+}
+
+func (c *Config) GetLoadedFiles() []string {
+	ret := make([]string, c.files.Size())
+	for i, f := range c.files.Values() {
+		ret[i], _ = f.(string)
+	}
+	return ret
 }
 
 func (c *Config) GetAllConfig() sync.Map {
