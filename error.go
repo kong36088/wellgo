@@ -100,7 +100,7 @@ func ErrorHandler(ctx *WContext) {
 				message = e.Error()
 			}
 		default:
-			logger.Error("can not handle error type", err)
+			logger.Error("wellgo: can not handle error type", err)
 			return
 		}
 

@@ -42,7 +42,7 @@ func (t TestS) Print(te *testing.T) {
 }
 
 func init(){
-	logger.Init()
+	InitLogger()
 }
 
 func TestAssignMapTo(t *testing.T) {

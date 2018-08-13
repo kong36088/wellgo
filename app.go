@@ -13,16 +13,17 @@ func Run() {
 	)
 
 	//初始化日志模块
-	if err = GetLoggerInstance().Init(); err != nil {
+	if err = InitLogger(); err != nil {
 		log.Fatal(err)
 	}
-	defer logger.Close()
+	defer CloseLogger()
 
 	//初始化配置模块
 	conf := NewConfig()
 	proto, err := conf.Get("config", "sys", "proto")
 	if err != nil {
-		log.Fatal(err)
+		logger.Error(err)
+		panic(err)
 	}
 
 	//初始化router
@@ -38,8 +39,8 @@ func Run() {
 		getHttpInstance().SetProtoType(ProtoHttps)
 		getHttpInstance().serveHttps()
 	case "tcp":
-		log.Fatal("Not support tcp now")
+		log.Fatal("wellgo: Not support tcp now")
 	default:
-		log.Fatal("Please config your proto")
+		log.Fatal("wellgo: Please config your proto")
 	}
 }

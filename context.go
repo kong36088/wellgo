@@ -4,6 +4,8 @@
 
 package wellgo
 
+import "github.com/cihub/seelog"
+
 type WContext struct {
 	Proto ProtoInterface
 
@@ -13,7 +15,7 @@ type WContext struct {
 
 	Config *Config
 
-	Logger *Logger
+	Logger seelog.LoggerInterface
 }
 
 func newContext() *WContext {

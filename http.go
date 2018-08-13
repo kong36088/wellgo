@@ -185,11 +185,13 @@ func getHttpInstance() *Http {
 		}
 		appUrl, err = http.conf.Get("config", "sys", "app_url")
 		if err != nil {
-			log.Fatal(err)
+			logger.Critical(err)
+			panic(err)
 		}
-		addr, err = http.conf.Get("conf", "sys", "addr")
+		addr, err = http.conf.Get("config", "sys", "addr")
 		if err != nil {
-			log.Fatal(err)
+			logger.Critical(err)
+			panic(err)
 		}
 
 		http.addr = addr
@@ -263,10 +265,11 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	Assert(err != nil, NewWException(err.Error()))
 
-	logger.Info("Req=%s", b)
+	logger.Infof("Req=%s", b)
 
 	if http.rpc == nil {
-		log.Fatal("wellgo.http.rpc is not set")
+		logger.Critical("wellgo.http.rpc is not set")
+		panic("wellgo.http.rpc is not set")
 	}
 
 	req.RawInput = b

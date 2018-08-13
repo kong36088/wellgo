@@ -26,7 +26,7 @@ func GetRouterInstance() *Router {
 	return router
 }
 
-func (r *Router) Register(path string, controller *Controller) {
+func (r *Router) Register(path string, controller ControllerInterface) {
 	r.bindings.Store(path, controller)
 }
 

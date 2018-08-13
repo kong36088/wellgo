@@ -1,34 +1,35 @@
 package wellgo
 
 import (
-	"github.com/alecthomas/log4go"
+	"github.com/cihub/seelog"
 )
 
 var (
-	logger *Logger
+	logger seelog.LoggerInterface
 )
 
-type Logger struct {
-	log4go.Logger
-}
-
-func GetLoggerInstance() *Logger {
+func GetLoggerInstance() seelog.LoggerInterface {
 	if logger == nil {
-		logger = &Logger{}
+		InitLogger()
 	}
 	return logger
 }
 
-func (logger *Logger) Init() error {
-	conf := NewConfig()
-	logPath, err := conf.Get("config", "log", "path")
-	if err != nil {
+func NewLogger() (seelog.LoggerInterface, error) {
+	return seelog.LoggerFromConfigAsFile(confPath + "seelog.xml")
+}
+
+func InitLogger() error {
+	var err error
+
+	if logger, err = seelog.LoggerFromConfigAsFile(confPath + "seelog.xml"); err != nil {
 		return err
 	}
-	logger.LoadConfiguration(appPath + logPath)
+
 	return nil
 }
 
-func (logger *Logger) Close() {
-	logger.Logger.Close()
+func CloseLogger() {
+	logger.Flush()
+	logger.Close()
 }
