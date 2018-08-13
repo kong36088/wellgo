@@ -20,7 +20,8 @@ func GetLoggerInstance() *Logger {
 }
 
 func (logger *Logger) Init() error {
-	logPath, err := conf.GetConfig("sys", "log_conf")
+	conf := NewConfig()
+	logPath, err := conf.Get("config", "log", "path")
 	if err != nil {
 		return err
 	}

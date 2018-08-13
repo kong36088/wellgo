@@ -12,6 +12,8 @@ type WContext struct {
 	Rsp Response
 
 	Config *Config
+
+	Logger *Logger
 }
 
 func newContext() *WContext {

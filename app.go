@@ -20,20 +20,26 @@ func Run() {
 
 	//初始化配置模块
 	conf := NewConfig()
-	proto, err := conf.Get("config", "sys", "Proto")
+	proto, err := conf.Get("config", "sys", "proto")
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	//初始化router
+	InitRouter()
+
 	switch proto {
 	case "http":
 		getHttpInstance().SetRPC(new(JsonRPC))
+		getHttpInstance().SetProtoType(ProtoHttp)
 		getHttpInstance().serveHttp()
 	case "https":
 		getHttpInstance().SetRPC(new(JsonRPC))
+		getHttpInstance().SetProtoType(ProtoHttps)
 		getHttpInstance().serveHttps()
 	case "tcp":
+		log.Fatal("Not support tcp now")
 	default:
-		log.Fatal("Please config your Proto")
+		log.Fatal("Please config your proto")
 	}
 }

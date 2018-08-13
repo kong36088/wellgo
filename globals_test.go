@@ -7,9 +7,9 @@ package wellgo
 
 import (
 	"testing"
-	"github.com/bitly/go-simplejson"
 	"reflect"
 	"errors"
+	"github.com/bitly/go-simplejson"
 )
 
 type TestS struct {
@@ -41,16 +41,21 @@ func (t TestS) Print(te *testing.T) {
 
 }
 
-func TestAssignJsonTo(t *testing.T) {
+func init(){
+	logger.Init()
+}
+
+func TestAssignMapTo(t *testing.T) {
 	tt := &TestS{}
-	j, _ := simplejson.NewJson([]byte(`{"a":1,"b":"b","c":"c","d":false,"e":[1,2,3,4,"mmd"],"f":{"wtf":1}}`))
+	j, _ := simplejson.NewJson([]byte(`{"a":1,"b":"b","c":"c","d":false,"e":[1,2,3,4,"mmd"],"f":{"mm":1}}`))
 	jm, _ := j.Map()
+	//jm := map[string]interface{}{"a": int8(1), "b": "1ff", "d": true,"e":"whatever","f":map[string]int{"mm":123}}
 
 	tt.Print(t)
 	for k, v := range jm {
 		t.Logf("k=%s, v=%s\n", k, v)
 	}
-	if !AssignJsonTo(jm, reflect.ValueOf(tt), "param") {
+	if !AssignMapTo("bb", reflect.ValueOf(tt), "param") {
 		t.Fail()
 	}
 	tt.Print(t)

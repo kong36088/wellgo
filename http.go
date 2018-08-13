@@ -54,8 +54,8 @@ func (http *Http) SetRPC(rpc RPC) {
 func (http *Http) GetProtoType() ProtoType {
 	return http.ProtoType
 }
-func (http *Http) SetProtoType(ptt ProtoType) {
-	http.ProtoType = ptt
+func (http *Http) SetProtoType(protoType ProtoType) {
+	http.ProtoType = protoType
 }
 
 type HttpRequest struct {
@@ -249,6 +249,7 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	ctx.Proto = http
 	ctx.Req = req
 	ctx.Rsp = rsp
+	ctx.Logger = GetLoggerInstance()
 
 	// error handler
 	defer ErrorHandler(ctx)
@@ -282,7 +283,7 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	// controller process
 	controller.Init(ctx)
 
-	AssignJsonTo(ctx.Req.GetArgs(), reflect.ValueOf(controller), "param")
+	AssignMapTo(ctx.Req.GetArgs(), reflect.ValueOf(controller), "param")
 
 	result := controller.Run()
 

@@ -13,6 +13,10 @@ type Router struct {
 	bindings *sync.Map
 }
 
+func InitRouter() {
+	router = GetRouterInstance()
+}
+
 func GetRouterInstance() *Router {
 	if router == nil {
 		router = &Router{
