@@ -6,7 +6,6 @@ package wellgo
 
 import (
 	"encoding/json"
-	"reflect"
 )
 
 type Result struct {
@@ -32,7 +31,7 @@ func NewResult(code int64, message string, data ...interface{}) *Result {
 
 func (r *Result) GetData() interface{} {
 	// return copy value
-	return reflect.New(reflect.ValueOf(r.Data).Elem().Type()).Interface()
+	return r.Data
 }
 
 func (r *Result) GetCode() int64 {

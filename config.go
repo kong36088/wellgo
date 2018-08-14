@@ -3,17 +3,9 @@ package wellgo
 import (
 	"github.com/larspensjo/config"
 	"fmt"
-	"os"
 	"errors"
-	"path/filepath"
 	"sync"
 	"github.com/emirpasic/gods/sets/treeset"
-)
-
-var (
-	curPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
-	appPath, _ = os.Getwd()
-	confPath   = appPath + "/conf/"
 )
 
 // threadsafe config

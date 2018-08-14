@@ -233,7 +233,7 @@ func (http *Http) serveHttps() {
 func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	var (
 		parsedReq  Request
-		controller *Controller
+		controller ControllerInterface
 		output     []byte
 	)
 	timer = &utils.Timer{}
@@ -271,7 +271,7 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	Assert(err == nil, NewWException(err))
 
-	logger.Infof("req=%s", b)
+	logger.Infof("wellgo: start, req=%s", b)
 
 	if http.rpc == nil {
 		logger.Critical("wellgo: wellgo.http.rpc is not set")

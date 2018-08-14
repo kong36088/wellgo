@@ -44,7 +44,7 @@ func (j *JsonRPC) RPCHandler(req Request) (Request, error) {
 	}
 
 	//判断Id
-	if input.Get("id").MustInt64(0) == 0 {
+	if input.Get("id").MustString("") == "" {
 		return nil, ErrInvalidInputFormat
 	}
 	// 判断version

@@ -2,6 +2,14 @@ package wellgo
 
 import (
 	"log"
+	"path/filepath"
+	"os"
+)
+
+var (
+	curPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
+	appPath, _ = os.Getwd()
+	confPath   = appPath + "/conf/"
 )
 
 type App struct {

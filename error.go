@@ -98,12 +98,11 @@ func ErrorHandler(ctx *WContext) {
 			message = we.Error()
 		case error:
 			e, _ := err.(error)
-			code := GetErrorCode(e)
-			if code == -1 {
+			if code = GetErrorCode(e); code == -1 {
 				e = ErrSystemError
 				code = GetErrorCode(e)
-				message = e.Error()
 			}
+			message = e.Error()
 		default:
 			logger.Error("wellgo: can not handle error type", err)
 			return
