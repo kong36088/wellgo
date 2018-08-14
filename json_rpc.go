@@ -11,17 +11,22 @@ import (
 )
 
 type JsonRPCReq struct {
-	Id      string      `json:"id"`
+	Id      *string     `json:"id"`
 	Version float64     `json:"jsonrpc"`
 	Method  string      `json:"method"`
 	Param   interface{} `json:"param"`
 }
 
 type JsonRPCRsp struct {
-	Id      string        `json:"id"`
+	Id      *string       `json:"id"`
 	Version float64       `json:"jsonrpc"`
-	Error   JsonRPCRspErr `json:"error"`
 	Result  interface{}   `json:"result"`
+}
+
+type JsonRPCErrRsp struct{
+	Id      *string       `json:"id"`
+	Version float64       `json:"jsonrpc"`
+	Error  JsonRPCRspErr   `json:"error"`
 }
 
 type JsonRPCRspErr struct {
@@ -39,7 +44,7 @@ func (j *JsonRPC) RPCHandler(req Request) (Request, error) {
 	}
 
 	//判断Id
-	if input.Get("id").MustInt(0) == 0 {
+	if input.Get("id").MustInt64(0) == 0 {
 		return nil, ErrInvalidInputFormat
 	}
 	// 判断version
@@ -62,34 +67,37 @@ func (j *JsonRPC) RPCHandler(req Request) (Request, error) {
 
 //TODO encode result
 func (j *JsonRPC) EncodeResponse(ctx *WContext, result Result) ([]byte, error) {
-	var output []byte
-	input, err := simplejson.NewJson(ctx.Req.GetRawInput())
-	if err != nil {
-		output, _ = json.Marshal(JsonRPCRsp{
-			Id:      input.Get("id").MustString(),
-			Version: 2.0,
-			Result:  result.GetData(),
-		})
-		logger.Error(err)
-		return output, err
-	}
+	var (
+		id    string
+		idPtr *string
+	)
+	input, _ := simplejson.NewJson(ctx.Req.GetRawInput())
 
+	if id = input.Get("id").MustString(); id != "" {
+		idPtr = &id
+	}
 	return json.Marshal(JsonRPCRsp{
-		Id:      input.Get("id").MustString(),
+		Id:      idPtr,
 		Version: 2.0,
 		Result:  result.GetData(),
 	})
 }
 
 func (j *JsonRPC) EncodeErrResponse(ctx *WContext, result Result) ([]byte, error) {
-	var id string
+	var (
+		id    string
+		idPtr *string
+	)
 	input, err := simplejson.NewJson(ctx.Req.GetRawInput())
+
 	if err == nil {
-		id = input.Get("id").MustString()
+		if id = input.Get("id").MustString(); id != "" {
+			idPtr = &id
+		}
 	}
 
-	return json.Marshal(JsonRPCRsp{
-		Id:      id,
+	return json.Marshal(JsonRPCErrRsp{
+		Id:      idPtr,
 		Version: 2.0,
 		Error: JsonRPCRspErr{
 			Code:    result.GetCode(),

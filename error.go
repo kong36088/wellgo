@@ -1,7 +1,8 @@
 package wellgo
 
 import (
-	"errors"
+	"github.com/pkg/errors"
+	"runtime/debug"
 )
 
 var (
@@ -27,16 +28,17 @@ var (
 	}
 )
 
+// TODO error trace back
 type WException struct {
-	Code    int64
-	Message string
+	Code int64
+	Err  error
 }
 
 func (we *WException) Error() string {
-	return we.Message
+	return we.Err.Error()
 }
 
-func NewWException(message string, codes ...int64) WException {
+func NewWException(err error, codes ...int64) WException {
 	var code int64
 	if len(codes) > 0 {
 		code = codes[0]
@@ -45,8 +47,8 @@ func NewWException(message string, codes ...int64) WException {
 	}
 
 	return WException{
-		Code:    code,
-		Message: message,
+		Code: code,
+		Err:  err,
 	}
 }
 
@@ -81,16 +83,19 @@ func ErrorHandler(ctx *WContext) {
 		var (
 			code    int64
 			message string
+			output  []byte
 		)
+		logger.Error(string(debug.Stack()))
+		logger.Error(err)
 		switch err.(type) {
 		case *WException:
 			we, _ := err.(*WException)
 			code = we.Code
-			message = we.Message
+			message = we.Error()
 		case WException:
 			we, _ := err.(WException)
 			code = we.Code
-			message = we.Message
+			message = we.Error()
 		case error:
 			e, _ := err.(error)
 			code := GetErrorCode(e)
@@ -103,7 +108,9 @@ func ErrorHandler(ctx *WContext) {
 			logger.Error("wellgo: can not handle error type", err)
 			return
 		}
-
-		ctx.Proto.GetRPC().EncodeErrResponse(ctx, *NewResult(code, message))
+		if output, err = ctx.Proto.GetRPC().EncodeErrResponse(ctx, *NewResult(code, message)); err != nil {
+			logger.Error(err)
+		}
+		ctx.Write(output)
 	}
 }

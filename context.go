@@ -24,18 +24,16 @@ func newContext() *WContext {
 }
 
 func (ctx *WContext) Write(content []byte) {
-	logger.Info("write=" + string(content))
+	logger.Infof("elapsed=%dms, rsp=%s", timer.TotalElapsed(), content)
 
 	ctx.Rsp.Write(content)
 }
 
 func (ctx *WContext) WriteString(content string) {
-	logger.Info("write=" + content)
+	logger.Infof("elapsed=%dms, rsp=%s", timer.TotalElapsed(), content)
 
 	ctx.Rsp.WriteString(content)
 }
-
-
 
 const (
 	ProtoHttp  = 1

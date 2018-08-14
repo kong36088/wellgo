@@ -18,6 +18,8 @@ func Run() {
 	}
 	defer CloseLogger()
 
+	logger.Info("wellgo: initializing framework")
+
 	//初始化配置模块
 	conf := NewConfig()
 	proto, err := conf.Get("config", "sys", "proto")
@@ -39,8 +41,10 @@ func Run() {
 		getHttpInstance().SetProtoType(ProtoHttps)
 		getHttpInstance().serveHttps()
 	case "tcp":
-		log.Fatal("wellgo: Not support tcp now")
+		logger.Error("wellgo: Not support tcp now")
+		panic("wellgo: Not support tcp now")
 	default:
-		log.Fatal("wellgo: Please config your proto")
+		logger.Error("wellgo: Please config your proto")
+		panic("wellgo: Not support tcp now")
 	}
 }

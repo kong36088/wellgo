@@ -8,8 +8,9 @@ package wellgo
 import (
 	"testing"
 	"reflect"
-	"errors"
+	"github.com/pkg/errors"
 	"github.com/bitly/go-simplejson"
+	"github.com/cihub/seelog"
 )
 
 type TestS struct {
@@ -41,8 +42,17 @@ func (t TestS) Print(te *testing.T) {
 
 }
 
-func init(){
-	InitLogger()
+func init() {
+	logger, _ = seelog.LoggerFromConfigAsString(`
+<seelog minlevel="debug">
+    <outputs formatid="global">
+        <console/>
+    </outputs>
+    <formats>
+        <format id="global" format="%Date %Time [%Level] %RelFile.%Line %Func MSG=%Msg%n"/>
+    </formats>
+</seelog>`)
+	logger.Debug(1)
 }
 
 func TestAssignMapTo(t *testing.T) {
@@ -55,7 +65,7 @@ func TestAssignMapTo(t *testing.T) {
 	for k, v := range jm {
 		t.Logf("k=%s, v=%s\n", k, v)
 	}
-	if !AssignMapTo("bb", reflect.ValueOf(tt), "param") {
+	if !AssignMapTo(jm, reflect.ValueOf(tt), "param") {
 		t.Fail()
 	}
 	tt.Print(t)
@@ -68,9 +78,9 @@ func TestAssert(t *testing.T) {
 	defer func() {
 		if err := recover(); err != nil {
 			e, _ := err.(WException)
-			if e.Message != msg || e.Code != int64(code) {
+			if e.Err.Error() != msg || e.Code != int64(code) {
 				t.Log(e)
-				t.Error(e.Message, e.Code)
+				t.Failed()
 			}
 		}
 	}()
@@ -79,6 +89,6 @@ func TestAssert(t *testing.T) {
 
 	Assert(1 == 1)
 
-	Assert(1 == 2, NewWException(errors.New(msg).Error(), code))
+	Assert(1 == 2, NewWException(errors.New(msg), code))
 
 }

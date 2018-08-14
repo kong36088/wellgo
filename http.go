@@ -9,6 +9,7 @@ import (
 	netHttp "net/http"
 	"log"
 	"reflect"
+	"github.com/kong36088/wellgo/utils"
 )
 
 const (
@@ -201,6 +202,7 @@ func getHttpInstance() *Http {
 }
 
 func (http *Http) serveHttp() {
+	logger.Infof("wellgo: start listening %s, uri=%s, proto=http", http.addr, http.appUrl)
 	netHttp.HandleFunc("/", http.httpHandler)
 	netHttp.ListenAndServe(http.addr, nil)
 }
@@ -219,6 +221,7 @@ func (http *Http) serveHttps() {
 		log.Fatal(err)
 	}
 
+	logger.Infof("wellgo: start listening %s, uri=%s, proto=https", http.addr, http.appUrl)
 	netHttp.HandleFunc("/", http.httpHandler)
 	netHttp.ListenAndServeTLS(http.addr, cert, key, nil)
 }
@@ -231,7 +234,10 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	var (
 		parsedReq  Request
 		controller *Controller
+		output     []byte
 	)
+	timer = &utils.Timer{}
+	timer.Start()
 
 	// init Req
 	req := &HttpRequest{
@@ -263,25 +269,26 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	}
 	// read request body
 	b, err := ioutil.ReadAll(r.Body)
-	Assert(err != nil, NewWException(err.Error()))
+	Assert(err == nil, NewWException(err))
 
-	logger.Infof("Req=%s", b)
+	logger.Infof("req=%s", b)
 
 	if http.rpc == nil {
-		logger.Critical("wellgo.http.rpc is not set")
+		logger.Critical("wellgo: wellgo.http.rpc is not set")
 		panic("wellgo.http.rpc is not set")
 	}
 
 	req.RawInput = b
 
+	// process rpc
 	parsedReq, err = http.rpc.RPCHandler(req)
-	Assert(err != nil, NewWException(err.Error()))
+	Assert(err == nil, NewWException(err))
 
 	req = parsedReq.(*HttpRequest)
 
 	// router
 	controller, err = router.Match(req.GetInterface())
-	Assert(err != nil, NewWException(err.Error()))
+	Assert(err == nil, NewWException(err))
 
 	// controller process
 	controller.Init(ctx)
@@ -290,8 +297,10 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 
 	result := controller.Run()
 
-	http.GetRPC().EncodeResponse(ctx, *result)
-
+	if output, err = http.GetRPC().EncodeResponse(ctx, *result); err != nil {
+		logger.Error(err)
+	}
+	ctx.Write(output)
 }
 
 type HttpHeader struct {
