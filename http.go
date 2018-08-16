@@ -231,11 +231,6 @@ func (http *Http) serveHttps() {
  * http 处理函数
  */
 func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
-	var (
-		parsedReq  Request
-		controller ControllerInterface
-		output     []byte
-	)
 	timer = &utils.Timer{}
 	timer.Start()
 
@@ -281,13 +276,13 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 	req.RawInput = b
 
 	// process rpc
-	parsedReq, err = http.rpc.RPCHandler(req)
+	parsedReq, err := http.rpc.RPCHandler(req)
 	Assert(err == nil, NewWException(err))
 
 	req = parsedReq.(*HttpRequest)
 
 	// router
-	controller, err = router.Match(req.GetInterface())
+	controller, err := router.Match(req.GetInterface())
 	Assert(err == nil, NewWException(err))
 
 	// controller process
@@ -297,7 +292,8 @@ func (http *Http) httpHandler(w netHttp.ResponseWriter, r *netHttp.Request) {
 
 	result := controller.Run()
 
-	if output, err = http.GetRPC().EncodeResponse(ctx, *result); err != nil {
+	output, err := http.GetRPC().EncodeResponse(ctx, *result)
+	if err != nil {
 		logger.Error(err)
 	}
 	ctx.Write(output)
